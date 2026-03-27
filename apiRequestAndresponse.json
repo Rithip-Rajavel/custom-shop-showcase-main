@@ -1,0 +1,4496 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+        "title": "Selva Hardware Shop API",
+        "description": "Complete backend API for Hardware Shop Management System",
+        "contact": {
+            "name": "Sri Sai Shiva Hardwares"
+        },
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "http://localhost:8080",
+            "description": "Generated server url"
+        }
+    ],
+    "security": [
+        {
+            "bearerAuth": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "Authentication",
+            "description": "Auth endpoints - login does not require JWT"
+        }
+    ],
+    "paths": {
+        "/api/users/{id}": {
+            "put": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Update user details",
+                "operationId": "updateUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateUserRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseUserDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Delete user (admin only)",
+                "operationId": "deleteUser",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/settings": {
+            "get": {
+                "tags": [
+                    "Shop Settings"
+                ],
+                "summary": "Get shop settings",
+                "operationId": "getSettings",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseSettingsDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Shop Settings"
+                ],
+                "summary": "Update shop settings (admin only)",
+                "operationId": "updateSettings",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/SettingsDto"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseSettingsDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/{id}": {
+            "get": {
+                "tags": [
+                    "Product Management"
+                ],
+                "summary": "Get product by ID",
+                "operationId": "getById",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseProductDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Product Management"
+                ],
+                "summary": "Update product details",
+                "operationId": "updateProduct",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseProductDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Product Management"
+                ],
+                "summary": "Delete product",
+                "operationId": "deleteProduct",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/{id}/stock": {
+            "put": {
+                "tags": [
+                    "Product Management"
+                ],
+                "summary": "Update product stock (add or subtract)",
+                "operationId": "updateStock",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StockUpdateRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseProductDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pricing/{id}": {
+            "put": {
+                "tags": [
+                    "Price Mapping"
+                ],
+                "summary": "Update existing price mapping",
+                "operationId": "update",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PriceMappingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePriceMappingDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Price Mapping"
+                ],
+                "summary": "Delete price mapping",
+                "operationId": "delete",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pending-bills/{id}": {
+            "get": {
+                "tags": [
+                    "Pending Bills (Rough Drafts)"
+                ],
+                "summary": "Get pending bill by ID",
+                "operationId": "getById_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePendingBillDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Pending Bills (Rough Drafts)"
+                ],
+                "summary": "Update pending bill",
+                "operationId": "update_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PendingBillRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePendingBillDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Pending Bills (Rough Drafts)"
+                ],
+                "summary": "Delete pending bill",
+                "operationId": "delete_1",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/employees/{id}": {
+            "get": {
+                "tags": [
+                    "Employee Management"
+                ],
+                "summary": "Get employee by ID",
+                "operationId": "getById_2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseEmployeeDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Employee Management"
+                ],
+                "summary": "Update employee details or salary",
+                "operationId": "update_2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmployeeRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseEmployeeDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Employee Management"
+                ],
+                "summary": "Deactivate employee (soft delete)",
+                "operationId": "delete_2",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/customers/{id}": {
+            "get": {
+                "tags": [
+                    "Customer Management"
+                ],
+                "summary": "Get customer by ID",
+                "operationId": "getById_3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseCustomerDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Customer Management"
+                ],
+                "summary": "Update customer details",
+                "operationId": "updateCustomer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustomerRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseCustomerDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Customer Management"
+                ],
+                "summary": "Delete customer",
+                "operationId": "deleteCustomer",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/users": {
+            "get": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Get all users (admin only)",
+                "operationId": "getAllUsers",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListUserDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "User Management"
+                ],
+                "summary": "Create new user (admin only)",
+                "operationId": "createUser",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CreateUserRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseUserDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products": {
+            "get": {
+                "tags": [
+                    "Product Management"
+                ],
+                "summary": "Get all products with optional filter",
+                "operationId": "getAllProducts",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "lowStock",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListProductDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Product Management"
+                ],
+                "summary": "Add new product",
+                "operationId": "createProduct",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProductRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseProductDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pricing": {
+            "post": {
+                "tags": [
+                    "Price Mapping"
+                ],
+                "summary": "Create or update price mapping",
+                "operationId": "createOrUpdate",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PriceMappingRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePriceMappingDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pending-bills": {
+            "get": {
+                "tags": [
+                    "Pending Bills (Rough Drafts)"
+                ],
+                "summary": "Get all pending bills",
+                "operationId": "getAll",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListPendingBillDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Pending Bills (Rough Drafts)"
+                ],
+                "summary": "Save pending bill",
+                "operationId": "create",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PendingBillRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePendingBillDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/payments": {
+            "get": {
+                "tags": [
+                    "Payment Transactions"
+                ],
+                "summary": "Get all payment transactions with optional filters",
+                "operationId": "getAll_1",
+                "parameters": [
+                    {
+                        "name": "customerId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fromDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "toDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListPaymentDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Payment Transactions"
+                ],
+                "summary": "Record payment transaction",
+                "operationId": "create_1",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PaymentRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePaymentDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices": {
+            "get": {
+                "tags": [
+                    "Invoice & Billing"
+                ],
+                "summary": "Get all invoices with optional filters",
+                "operationId": "getAllInvoices",
+                "parameters": [
+                    {
+                        "name": "customerId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "paid",
+                                "pending",
+                                "cancelled"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "billType",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "rough",
+                                "final"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "fromDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "toDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListInvoiceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Invoice & Billing"
+                ],
+                "summary": "Create new invoice",
+                "operationId": "createInvoice",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/InvoiceRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseInvoiceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices/{id}/pay": {
+            "post": {
+                "tags": [
+                    "Invoice & Billing"
+                ],
+                "summary": "Apply payment to invoice",
+                "operationId": "payInvoice",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PayInvoiceRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseInvoiceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/employees": {
+            "get": {
+                "tags": [
+                    "Employee Management"
+                ],
+                "summary": "Get all employees with optional active filter and search",
+                "operationId": "getAll_2",
+                "parameters": [
+                    {
+                        "name": "active",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListEmployeeDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Employee Management"
+                ],
+                "summary": "Add new employee (code auto-generated if not provided)",
+                "operationId": "create_2",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/EmployeeRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseEmployeeDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/customers": {
+            "get": {
+                "tags": [
+                    "Customer Management"
+                ],
+                "summary": "Get all customers with optional filter and search",
+                "operationId": "getAllCustomers",
+                "parameters": [
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "customer",
+                                "contractor"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListCustomerDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Customer Management"
+                ],
+                "summary": "Add new customer",
+                "operationId": "createCustomer",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CustomerRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseCustomerDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/commissions": {
+            "get": {
+                "tags": [
+                    "Commission Management"
+                ],
+                "summary": "Get all commissions with optional filters",
+                "operationId": "getAll_3",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "fromDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "toDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListCommissionDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Commission Management"
+                ],
+                "summary": "Add commission record",
+                "operationId": "create_3",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/CommissionRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseCommissionDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Logout (client should discard token)",
+                "operationId": "logout",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Login and get JWT token",
+                "operationId": "login",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LoginRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LoginResponse"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/attendance/mark": {
+            "post": {
+                "tags": [
+                    "Attendance & Payroll"
+                ],
+                "summary": "Mark or update attendance for an employee (upsert by employee+date)",
+                "operationId": "markAttendance",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AttendanceRequest"
+                            }
+                        }
+                    },
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseAttendanceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reports/sales": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get sales report",
+                "operationId": "getSalesReport",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "month"
+                        }
+                    },
+                    {
+                        "name": "customerId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseSalesReport"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reports/ledger/{customerId}": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get customer ledger",
+                "operationId": "getLedger",
+                "parameters": [
+                    {
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseLedgerReport"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reports/inventory": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get inventory report",
+                "operationId": "getInventory",
+                "parameters": [
+                    {
+                        "name": "lowStock",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
+                    },
+                    {
+                        "name": "category",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseInventoryReport"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/reports/commissions": {
+            "get": {
+                "tags": [
+                    "Reports"
+                ],
+                "summary": "Get commission report",
+                "operationId": "getCommissions",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "fromDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "toDate",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseCommissionReport"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/products/search": {
+            "get": {
+                "tags": [
+                    "Product Management"
+                ],
+                "summary": "Search product by code or barcode",
+                "operationId": "search",
+                "parameters": [
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseProductDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/pricing/customer/{customerId}": {
+            "get": {
+                "tags": [
+                    "Price Mapping"
+                ],
+                "summary": "Get customer-specific pricing",
+                "operationId": "getByCustomer",
+                "parameters": [
+                    {
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListPriceMappingDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/payments/customer/{customerId}": {
+            "get": {
+                "tags": [
+                    "Payment Transactions"
+                ],
+                "summary": "Get customer payment history",
+                "operationId": "getByCustomer_1",
+                "parameters": [
+                    {
+                        "name": "customerId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListPaymentDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices/{id}": {
+            "get": {
+                "tags": [
+                    "Invoice & Billing"
+                ],
+                "summary": "Get invoice by ID",
+                "operationId": "getById_4",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseInvoiceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Invoice & Billing"
+                ],
+                "summary": "Cancel/delete invoice",
+                "operationId": "deleteInvoice",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices/stats": {
+            "get": {
+                "tags": [
+                    "Invoice & Billing"
+                ],
+                "summary": "Get invoice statistics",
+                "operationId": "getStats",
+                "parameters": [
+                    {
+                        "name": "period",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "month"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseInvoiceStatsDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/invoices/next-number": {
+            "get": {
+                "tags": [
+                    "Invoice & Billing"
+                ],
+                "summary": "Get next invoice number",
+                "operationId": "nextNumber",
+                "parameters": [
+                    {
+                        "name": "prefix",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "default": "INV"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseString"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/customers/{id}/balance": {
+            "get": {
+                "tags": [
+                    "Customer Management"
+                ],
+                "summary": "Get customer balance summary",
+                "operationId": "getBalance",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseCustomerBalanceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/commissions/contractor/{contractorId}": {
+            "get": {
+                "tags": [
+                    "Commission Management"
+                ],
+                "summary": "Get contractor commission history",
+                "operationId": "getByContractor",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListCommissionDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/commissions/contractor/{contractorId}/total": {
+            "get": {
+                "tags": [
+                    "Commission Management"
+                ],
+                "summary": "Get total commission for contractor",
+                "operationId": "getTotal",
+                "parameters": [
+                    {
+                        "name": "contractorId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseMapStringBigDecimal"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/me": {
+            "get": {
+                "tags": [
+                    "Authentication"
+                ],
+                "summary": "Get current authenticated user",
+                "operationId": "me",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseUserDto"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/attendance/payroll/{employeeId}": {
+            "get": {
+                "tags": [
+                    "Attendance & Payroll"
+                ],
+                "summary": "Calculate payroll with Loss of Pay for an employee (year+month)",
+                "operationId": "getPayroll",
+                "parameters": [
+                    {
+                        "name": "employeeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "year",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    },
+                    {
+                        "name": "month",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int32"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponsePayrollSummaryDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendance/employee/{employeeId}": {
+            "get": {
+                "tags": [
+                    "Attendance & Payroll"
+                ],
+                "summary": "Get attendance records for an employee in a date range",
+                "operationId": "getEmployeeAttendance",
+                "parameters": [
+                    {
+                        "name": "employeeId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "from",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "to",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListAttendanceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendance/daily": {
+            "get": {
+                "tags": [
+                    "Attendance & Payroll"
+                ],
+                "summary": "Get all employees' attendance for a specific date",
+                "operationId": "getDailyAttendance",
+                "parameters": [
+                    {
+                        "name": "date",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseListAttendanceDto"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/payments/{id}": {
+            "delete": {
+                "tags": [
+                    "Payment Transactions"
+                ],
+                "summary": "Delete payment transaction",
+                "operationId": "delete_3",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/api/attendance/{id}": {
+            "delete": {
+                "tags": [
+                    "Attendance & Payroll"
+                ],
+                "summary": "Delete attendance record (for corrections)",
+                "operationId": "deleteAttendance",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "*/*": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiResponseVoid"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CreateUserRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "admin",
+                            "staff"
+                        ]
+                    },
+                    "phone": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "name",
+                    "password",
+                    "role"
+                ]
+            },
+            "ApiResponseUserDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/UserDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ErrorDetail": {
+                "type": "object",
+                "properties": {
+                    "code": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "details": {
+                        "type": "object"
+                    }
+                }
+            },
+            "UserDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "type": "string",
+                        "enum": [
+                            "admin",
+                            "staff"
+                        ]
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "SettingsDto": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "gstNumber": {
+                        "type": "string"
+                    },
+                    "bankName": {
+                        "type": "string"
+                    },
+                    "accountNumber": {
+                        "type": "string"
+                    },
+                    "ifscCode": {
+                        "type": "string"
+                    },
+                    "upiId": {
+                        "type": "string"
+                    },
+                    "defaultGstPercentage": {
+                        "type": "number"
+                    },
+                    "invoicePrefix": {
+                        "type": "string"
+                    },
+                    "termsAndConditions": {
+                        "type": "string"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ApiResponseSettingsDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SettingsDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ProductRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "barcode": {
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0.01
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0
+                    },
+                    "unit": {
+                        "type": "string"
+                    },
+                    "gstPercentage": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "pricingType": {
+                        "type": "string",
+                        "enum": [
+                            "standard",
+                            "per_sqft",
+                            "per_rft"
+                        ]
+                    }
+                },
+                "required": [
+                    "code",
+                    "gstPercentage",
+                    "name",
+                    "price",
+                    "unit"
+                ]
+            },
+            "ApiResponseProductDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/ProductDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ProductDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "barcode": {
+                        "type": "string"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "unit": {
+                        "type": "string"
+                    },
+                    "gstPercentage": {
+                        "type": "number"
+                    },
+                    "category": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "pricingType": {
+                        "type": "string",
+                        "enum": [
+                            "standard",
+                            "per_sqft",
+                            "per_rft"
+                        ]
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "StockUpdateRequest": {
+                "type": "object",
+                "properties": {
+                    "quantity": {
+                        "type": "integer",
+                        "format": "int32",
+                        "minimum": 0
+                    },
+                    "operation": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "operation",
+                    "quantity"
+                ]
+            },
+            "PriceMappingRequest": {
+                "type": "object",
+                "properties": {
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "productId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "lastPrice": {
+                        "type": "number",
+                        "minimum": 0
+                    }
+                },
+                "required": [
+                    "customerId",
+                    "lastPrice",
+                    "productId"
+                ]
+            },
+            "ApiResponsePriceMappingDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PriceMappingDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "PriceMappingDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "productId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "lastPrice": {
+                        "type": "number"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "InvoiceItemRequest": {
+                "type": "object",
+                "properties": {
+                    "productId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "productName": {
+                        "type": "string"
+                    },
+                    "productCode": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "number",
+                        "minimum": 0.01
+                    },
+                    "price": {
+                        "type": "number",
+                        "minimum": 0
+                    },
+                    "originalPrice": {
+                        "type": "number"
+                    },
+                    "lastPurchasedPrice": {
+                        "type": "number"
+                    },
+                    "gstPercentage": {
+                        "type": "number"
+                    },
+                    "withTax": {
+                        "type": "boolean"
+                    },
+                    "gstAmount": {
+                        "type": "number"
+                    },
+                    "discount": {
+                        "type": "number"
+                    },
+                    "discountPercentage": {
+                        "type": "number"
+                    },
+                    "subtotal": {
+                        "type": "number"
+                    },
+                    "total": {
+                        "type": "number"
+                    },
+                    "customTotal": {
+                        "type": "number"
+                    },
+                    "pricingType": {
+                        "type": "string",
+                        "enum": [
+                            "standard",
+                            "per_sqft",
+                            "per_rft"
+                        ]
+                    },
+                    "height": {
+                        "type": "number"
+                    },
+                    "width": {
+                        "type": "number"
+                    },
+                    "area": {
+                        "type": "number"
+                    }
+                },
+                "required": [
+                    "gstAmount",
+                    "gstPercentage",
+                    "originalPrice",
+                    "price",
+                    "productCode",
+                    "productId",
+                    "productName",
+                    "quantity",
+                    "subtotal",
+                    "total"
+                ]
+            },
+            "PendingBillRequest": {
+                "type": "object",
+                "properties": {
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "customerType": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "contractor"
+                        ]
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "card",
+                            "upi",
+                            "credit"
+                        ]
+                    },
+                    "billDiscount": {
+                        "type": "number"
+                    },
+                    "amountPaid": {
+                        "type": "number"
+                    },
+                    "endCustomerName": {
+                        "type": "string"
+                    },
+                    "commission": {
+                        "type": "number"
+                    },
+                    "notes": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InvoiceItemRequest"
+                        }
+                    }
+                },
+                "required": [
+                    "customerId",
+                    "customerName",
+                    "customerType",
+                    "paymentMethod"
+                ]
+            },
+            "ApiResponsePendingBillDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PendingBillDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "InvoiceItemDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "productId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "productName": {
+                        "type": "string"
+                    },
+                    "productCode": {
+                        "type": "string"
+                    },
+                    "quantity": {
+                        "type": "number"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "originalPrice": {
+                        "type": "number"
+                    },
+                    "lastPurchasedPrice": {
+                        "type": "number"
+                    },
+                    "gstPercentage": {
+                        "type": "number"
+                    },
+                    "withTax": {
+                        "type": "boolean"
+                    },
+                    "gstAmount": {
+                        "type": "number"
+                    },
+                    "discount": {
+                        "type": "number"
+                    },
+                    "discountPercentage": {
+                        "type": "number"
+                    },
+                    "subtotal": {
+                        "type": "number"
+                    },
+                    "total": {
+                        "type": "number"
+                    },
+                    "customTotal": {
+                        "type": "number"
+                    },
+                    "pricingType": {
+                        "type": "string",
+                        "enum": [
+                            "standard",
+                            "per_sqft",
+                            "per_rft"
+                        ]
+                    },
+                    "height": {
+                        "type": "number"
+                    },
+                    "width": {
+                        "type": "number"
+                    },
+                    "area": {
+                        "type": "number"
+                    }
+                }
+            },
+            "PendingBillDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "customerType": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "contractor"
+                        ]
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "card",
+                            "upi",
+                            "credit"
+                        ]
+                    },
+                    "billDiscount": {
+                        "type": "number"
+                    },
+                    "amountPaid": {
+                        "type": "number"
+                    },
+                    "endCustomerName": {
+                        "type": "string"
+                    },
+                    "commission": {
+                        "type": "number"
+                    },
+                    "notes": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InvoiceItemDto"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "EmployeeRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "designation": {
+                        "type": "string"
+                    },
+                    "department": {
+                        "type": "string"
+                    },
+                    "dateOfJoining": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "monthlySalary": {
+                        "type": "number",
+                        "minimum": 0.01
+                    },
+                    "active": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "monthlySalary",
+                    "name"
+                ]
+            },
+            "ApiResponseEmployeeDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/EmployeeDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "EmployeeDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "designation": {
+                        "type": "string"
+                    },
+                    "department": {
+                        "type": "string"
+                    },
+                    "dateOfJoining": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "monthlySalary": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "active": {
+                        "type": "boolean"
+                    }
+                }
+            },
+            "CustomerRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "contractor"
+                        ]
+                    }
+                },
+                "required": [
+                    "name",
+                    "type"
+                ]
+            },
+            "ApiResponseCustomerDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/CustomerDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "CustomerDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "address": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "contractor"
+                        ]
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "PaymentRequest": {
+                "type": "object",
+                "properties": {
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "invoiceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "invoiceNumber": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "billing",
+                            "payment"
+                        ]
+                    },
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0.01
+                    },
+                    "balanceAfter": {
+                        "type": "number"
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "card",
+                            "upi",
+                            "credit"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "balanceAfter",
+                    "customerId",
+                    "customerName",
+                    "paymentMethod",
+                    "type"
+                ]
+            },
+            "ApiResponsePaymentDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PaymentDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "PaymentDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "invoiceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "invoiceNumber": {
+                        "type": "string"
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": [
+                            "billing",
+                            "payment"
+                        ]
+                    },
+                    "amount": {
+                        "type": "number"
+                    },
+                    "balanceAfter": {
+                        "type": "number"
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "card",
+                            "upi",
+                            "credit"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "InvoiceRequest": {
+                "type": "object",
+                "properties": {
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "customerPhone": {
+                        "type": "string"
+                    },
+                    "customerType": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "contractor"
+                        ]
+                    },
+                    "endCustomerName": {
+                        "type": "string"
+                    },
+                    "commission": {
+                        "type": "number"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InvoiceItemRequest"
+                        }
+                    },
+                    "subtotal": {
+                        "type": "number"
+                    },
+                    "totalDiscount": {
+                        "type": "number"
+                    },
+                    "totalGst": {
+                        "type": "number"
+                    },
+                    "grandTotal": {
+                        "type": "number"
+                    },
+                    "amountPaid": {
+                        "type": "number"
+                    },
+                    "balance": {
+                        "type": "number"
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "card",
+                            "upi",
+                            "credit"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "paid",
+                            "pending",
+                            "cancelled"
+                        ]
+                    },
+                    "billType": {
+                        "type": "string",
+                        "enum": [
+                            "rough",
+                            "final"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "amountPaid",
+                    "customerId",
+                    "customerName",
+                    "customerType",
+                    "grandTotal",
+                    "items",
+                    "paymentMethod",
+                    "subtotal",
+                    "totalGst"
+                ]
+            },
+            "ApiResponseInvoiceDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/InvoiceDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "InvoiceDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "invoiceNumber": {
+                        "type": "string"
+                    },
+                    "customerId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "customerPhone": {
+                        "type": "string"
+                    },
+                    "customerType": {
+                        "type": "string",
+                        "enum": [
+                            "customer",
+                            "contractor"
+                        ]
+                    },
+                    "endCustomerName": {
+                        "type": "string"
+                    },
+                    "commission": {
+                        "type": "number"
+                    },
+                    "subtotal": {
+                        "type": "number"
+                    },
+                    "totalDiscount": {
+                        "type": "number"
+                    },
+                    "totalGst": {
+                        "type": "number"
+                    },
+                    "grandTotal": {
+                        "type": "number"
+                    },
+                    "amountPaid": {
+                        "type": "number"
+                    },
+                    "balance": {
+                        "type": "number"
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "card",
+                            "upi",
+                            "credit"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "paid",
+                            "pending",
+                            "cancelled"
+                        ]
+                    },
+                    "billType": {
+                        "type": "string",
+                        "enum": [
+                            "rough",
+                            "final"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string"
+                    },
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InvoiceItemDto"
+                        }
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "PayInvoiceRequest": {
+                "type": "object",
+                "properties": {
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0.01
+                    },
+                    "paymentMethod": {
+                        "type": "string",
+                        "enum": [
+                            "cash",
+                            "card",
+                            "upi",
+                            "credit"
+                        ]
+                    },
+                    "notes": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "amount",
+                    "paymentMethod"
+                ]
+            },
+            "CommissionRequest": {
+                "type": "object",
+                "properties": {
+                    "contractorId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "contractorName": {
+                        "type": "string"
+                    },
+                    "invoiceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "invoiceNumber": {
+                        "type": "string"
+                    },
+                    "endCustomerName": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "minimum": 0
+                    }
+                },
+                "required": [
+                    "amount",
+                    "contractorId",
+                    "contractorName",
+                    "endCustomerName",
+                    "invoiceId",
+                    "invoiceNumber"
+                ]
+            },
+            "ApiResponseCommissionDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/CommissionDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "CommissionDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "contractorId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "contractorName": {
+                        "type": "string"
+                    },
+                    "invoiceId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "invoiceNumber": {
+                        "type": "string"
+                    },
+                    "endCustomerName": {
+                        "type": "string"
+                    },
+                    "amount": {
+                        "type": "number"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ApiResponseVoid": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "object"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "LoginRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "email",
+                    "password"
+                ]
+            },
+            "LoginResponse": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserDto"
+                    },
+                    "token": {
+                        "type": "string"
+                    },
+                    "permissions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "AttendanceRequest": {
+                "type": "object",
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "attendanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "present",
+                            "absent",
+                            "half_day",
+                            "leave",
+                            "holiday"
+                        ]
+                    },
+                    "checkInTime": {
+                        "$ref": "#/components/schemas/LocalTime"
+                    },
+                    "checkOutTime": {
+                        "$ref": "#/components/schemas/LocalTime"
+                    },
+                    "notes": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "attendanceDate",
+                    "employeeId",
+                    "status"
+                ]
+            },
+            "LocalTime": {
+                "type": "object",
+                "properties": {
+                    "hour": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "minute": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "second": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "nano": {
+                        "type": "integer",
+                        "format": "int32"
+                    }
+                }
+            },
+            "ApiResponseAttendanceDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/AttendanceDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "AttendanceDto": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "employeeName": {
+                        "type": "string"
+                    },
+                    "employeeCode": {
+                        "type": "string"
+                    },
+                    "attendanceDate": {
+                        "type": "string",
+                        "format": "date"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "present",
+                            "absent",
+                            "half_day",
+                            "leave",
+                            "holiday"
+                        ]
+                    },
+                    "checkInTime": {
+                        "$ref": "#/components/schemas/LocalTime"
+                    },
+                    "checkOutTime": {
+                        "$ref": "#/components/schemas/LocalTime"
+                    },
+                    "notes": {
+                        "type": "string"
+                    },
+                    "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "ApiResponseListUserDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseSalesReport": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/SalesReport"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "CategoryStat": {
+                "type": "object",
+                "properties": {
+                    "category": {
+                        "type": "string"
+                    },
+                    "revenue": {
+                        "type": "number"
+                    },
+                    "quantity": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "CustomerStat": {
+                "type": "object",
+                "properties": {
+                    "customerName": {
+                        "type": "string"
+                    },
+                    "revenue": {
+                        "type": "number"
+                    },
+                    "invoiceCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "SalesReport": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "$ref": "#/components/schemas/SalesSummary"
+                    },
+                    "byCategory": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CategoryStat"
+                        }
+                    },
+                    "byCustomer": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CustomerStat"
+                        }
+                    }
+                }
+            },
+            "SalesSummary": {
+                "type": "object",
+                "properties": {
+                    "totalRevenue": {
+                        "type": "number"
+                    },
+                    "totalInvoices": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "averageInvoiceValue": {
+                        "type": "number"
+                    },
+                    "totalDiscount": {
+                        "type": "number"
+                    }
+                }
+            },
+            "ApiResponseLedgerReport": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/LedgerReport"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "CustomerBalanceDto": {
+                "type": "object",
+                "properties": {
+                    "totalBilled": {
+                        "type": "number"
+                    },
+                    "totalPaid": {
+                        "type": "number"
+                    },
+                    "pendingBalance": {
+                        "type": "number"
+                    },
+                    "invoiceCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "LedgerReport": {
+                "type": "object",
+                "properties": {
+                    "customer": {
+                        "$ref": "#/components/schemas/CustomerDto"
+                    },
+                    "balance": {
+                        "$ref": "#/components/schemas/CustomerBalanceDto"
+                    },
+                    "invoices": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InvoiceDto"
+                        }
+                    },
+                    "transactions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentDto"
+                        }
+                    },
+                    "commissions": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommissionDto"
+                        }
+                    }
+                }
+            },
+            "ApiResponseInventoryReport": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/InventoryReport"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "InventoryReport": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "$ref": "#/components/schemas/InventorySummary"
+                    },
+                    "products": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductStat"
+                        }
+                    }
+                }
+            },
+            "InventorySummary": {
+                "type": "object",
+                "properties": {
+                    "totalProducts": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "totalStockValue": {
+                        "type": "number"
+                    },
+                    "lowStockCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ProductStat": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "code": {
+                        "type": "string"
+                    },
+                    "stock": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "price": {
+                        "type": "number"
+                    },
+                    "category": {
+                        "type": "string"
+                    }
+                }
+            },
+            "ApiResponseCommissionReport": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/CommissionReport"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "CommissionReport": {
+                "type": "object",
+                "properties": {
+                    "summary": {
+                        "$ref": "#/components/schemas/CommissionSummary"
+                    },
+                    "byContractor": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommissionDto"
+                        }
+                    }
+                }
+            },
+            "CommissionSummary": {
+                "type": "object",
+                "properties": {
+                    "totalCommission": {
+                        "type": "number"
+                    },
+                    "contractorCount": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            },
+            "ApiResponseListProductDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ProductDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseListPriceMappingDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PriceMappingDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseListPendingBillDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PendingBillDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseListPaymentDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PaymentDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseListInvoiceDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/InvoiceDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseInvoiceStatsDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/InvoiceStatsDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "InvoiceStatsDto": {
+                "type": "object",
+                "properties": {
+                    "totalInvoices": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "todayInvoices": {
+                        "type": "integer",
+                        "format": "int64"
+                    },
+                    "todayRevenue": {
+                        "type": "number"
+                    },
+                    "monthlyRevenue": {
+                        "type": "number"
+                    },
+                    "pendingAmount": {
+                        "type": "number"
+                    }
+                }
+            },
+            "ApiResponseString": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseListEmployeeDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/EmployeeDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseListCustomerDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CustomerDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseCustomerBalanceDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/CustomerBalanceDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseListCommissionDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CommissionDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponseMapStringBigDecimal": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "number"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "ApiResponsePayrollSummaryDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "$ref": "#/components/schemas/PayrollSummaryDto"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            },
+            "PayrollSummaryDto": {
+                "type": "object",
+                "properties": {
+                    "employeeId": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "employeeName": {
+                        "type": "string"
+                    },
+                    "employeeCode": {
+                        "type": "string"
+                    },
+                    "year": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "month": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "totalWorkingDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "presentDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "absentDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "halfDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "leaveDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "holidayDays": {
+                        "type": "integer",
+                        "format": "int32"
+                    },
+                    "monthlySalary": {
+                        "type": "number"
+                    },
+                    "perDaySalary": {
+                        "type": "number"
+                    },
+                    "lossOfPayDays": {
+                        "type": "number"
+                    },
+                    "lossOfPayAmount": {
+                        "type": "number"
+                    },
+                    "netPayableSalary": {
+                        "type": "number"
+                    },
+                    "attendanceDetails": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AttendanceDto"
+                        }
+                    }
+                }
+            },
+            "ApiResponseListAttendanceDto": {
+                "type": "object",
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AttendanceDto"
+                        }
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "error": {
+                        "$ref": "#/components/schemas/ErrorDetail"
+                    }
+                }
+            }
+        },
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "name": "bearerAuth",
+                "scheme": "bearer",
+                "bearerFormat": "JWT"
+            }
+        }
+    }
+}
