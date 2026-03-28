@@ -14,6 +14,7 @@ import CustomerLedger from "./pages/CustomerLedger";
 import Invoices from "./pages/Invoices";
 import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
+import Bonus from "./pages/Bonus";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
@@ -68,6 +69,11 @@ const App = () => (
             <Route path="/attendance" element={
               <ProtectedRoute requiredPermission="attendance">
                 <Attendance />
+              </ProtectedRoute>
+            } />
+            <Route path="/bonus" element={
+              <ProtectedRoute requiredPermission="admin">
+                <Bonus />
               </ProtectedRoute>
             } />
             <Route path="/reports" element={

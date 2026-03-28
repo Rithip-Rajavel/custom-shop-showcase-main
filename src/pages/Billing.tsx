@@ -21,6 +21,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { usePriceMapping } from '@/hooks/usePriceMapping';
 import { useCommissions } from '@/hooks/useCommissions';
 import { usePendingBills, PendingBill } from '@/hooks/usePendingBills';
+import { useLastPaymentValues } from '@/hooks/useLastPaymentValues';
 import { BillItem, Customer, Product, PaymentMethod, Invoice } from '@/types';
 import { generateId, formatCurrency, calculateDiscountPercentage } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +36,7 @@ export default function Billing() {
   const { getLastPrice, updatePriceMappingsFromInvoice } = usePriceMapping();
   const { addCommission } = useCommissions();
   const { pendingBills, savePendingBill, removePendingBill } = usePendingBills();
+  const { getLastPaymentValue, saveLastPaymentValuesForInvoice } = useLastPaymentValues();
   const { toast } = useToast();
   const printRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +57,14 @@ export default function Billing() {
   const [commission, setCommission] = useState(0);
   const [billNotes, setBillNotes] = useState('');
 
+  const handleAddCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
+    return addCustomer(customerData) as unknown as Customer;
+  };
+
+  const handleAddProduct = (productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
+    return addProduct(productData) as unknown as Product;
+  };
+
   const isContractor = selectedCustomer?.type === 'contractor';
 
   const handlePrint = useReactToPrint({
@@ -62,24 +72,60 @@ export default function Billing() {
     documentTitle: invoiceForPrint?.invoiceNumber || 'Rough-Bill',
   });
 
-  const handleSelectCustomer = (customer: Customer) => {
+  const handleSelectCustomer = async (customer: Customer) => {
     setSelectedCustomer(customer);
-    setBillItems((items) =>
-      items.map((item) => {
-        const lastPrice = getLastPrice(customer.id, item.productId);
-        const price = lastPrice ?? item.originalPrice;
-        const baseAmount = calculateItemBaseAmount(item, price);
-        const gstAmount = item.withTax ? (baseAmount * item.gstPercentage) / 100 : 0;
-        return {
-          ...item,
-          price,
-          lastPurchasedPrice: lastPrice,
-          gstAmount,
-          subtotal: baseAmount,
-          total: baseAmount + gstAmount,
-        };
+
+    // Update prices for existing items based on customer's last payment values
+    const updatedItems = await Promise.all(
+      billItems.map(async (item) => {
+        if (customer.id === 'walk-in') {
+          // Reset to original price for walk-in customers
+          const price = item.originalPrice;
+          const baseAmount = calculateItemBaseAmount(item, price);
+          const gstAmount = item.withTax ? (baseAmount * item.gstPercentage) / 100 : 0;
+          return {
+            ...item,
+            price,
+            lastPurchasedPrice: undefined,
+            gstAmount,
+            subtotal: baseAmount,
+            total: baseAmount + gstAmount,
+          };
+        } else {
+          // Try to get last payment value for this customer
+          try {
+            const lastPaymentValue = await getLastPaymentValue(customer.id, item.productId);
+            const lastPrice = lastPaymentValue?.lastUnitPrice;
+            const price = lastPrice ?? item.originalPrice;
+            const baseAmount = calculateItemBaseAmount(item, price);
+            const gstAmount = item.withTax ? (baseAmount * item.gstPercentage) / 100 : 0;
+            return {
+              ...item,
+              price,
+              lastPurchasedPrice: lastPrice,
+              gstAmount,
+              subtotal: baseAmount,
+              total: baseAmount + gstAmount,
+            };
+          } catch (error) {
+            // Fallback to original price if fetch fails
+            const price = item.originalPrice;
+            const baseAmount = calculateItemBaseAmount(item, price);
+            const gstAmount = item.withTax ? (baseAmount * item.gstPercentage) / 100 : 0;
+            return {
+              ...item,
+              price,
+              lastPurchasedPrice: undefined,
+              gstAmount,
+              subtotal: baseAmount,
+              total: baseAmount + gstAmount,
+            };
+          }
+        }
       })
     );
+
+    setBillItems(updatedItems);
   };
 
   const calculateItemBaseAmount = (item: BillItem, price?: number) => {
@@ -96,13 +142,25 @@ export default function Billing() {
   // Get effective total for an item (respects customTotal)
   const getEffectiveTotal = (item: BillItem) => item.customTotal !== undefined ? item.customTotal : item.total;
 
-  const addProductToBill = (product: Product) => {
+  const addProductToBill = async (product: Product) => {
     const existingItem = billItems.find((item) => item.productId === product.id);
 
     if (existingItem) {
       updateBillItem(existingItem.id, { quantity: existingItem.quantity + 1 });
     } else {
-      const lastPrice = selectedCustomer ? getLastPrice(selectedCustomer.id, product.id) : undefined;
+      // Get last payment value for this customer and product
+      let lastPrice: number | undefined;
+      if (selectedCustomer && selectedCustomer.id !== 'walk-in') {
+        try {
+          const lastPaymentValue = await getLastPaymentValue(selectedCustomer.id, product.id);
+          console.log('Last payment value:', lastPaymentValue);
+          lastPrice = lastPaymentValue?.lastUnitPrice;
+        } catch (error) {
+          console.log('Failed to fetch last payment value:', error);
+          // Continue with original price if last payment value fetch fails
+        }
+      }
+
       const usePrice = lastPrice ?? product.price;
       const isGlass = product.category?.toLowerCase() === 'glass';
       const pricingType = isGlass ? (product.pricingType || 'per_sqft') : 'standard';
@@ -120,7 +178,7 @@ export default function Billing() {
         originalPrice: product.price,
         lastPurchasedPrice: lastPrice,
         gstPercentage: product.gstPercentage,
-        withTax: true,
+        withTax: false,
         gstAmount,
         discount: 0,
         discountPercentage: 0,
@@ -165,7 +223,28 @@ export default function Billing() {
     setBillItems((items) => items.filter((item) => item.id !== id));
   };
 
-  const clearBill = () => {
+  const clearBill = async () => {
+    // Save current bill as pending payment before clearing
+    if (billItems.length > 0 && selectedCustomer && selectedCustomer.id !== 'walk-in') {
+      try {
+        const lastPaymentData = billItems.map(item => ({
+          customerId: selectedCustomer.id,
+          productId: item.productId,
+          productName: item.productName,
+          productCode: item.productCode,
+          lastAmount: item.total,
+          lastQuantity: item.quantity,
+          lastUnitPrice: item.price,
+        }));
+
+        await saveLastPaymentValuesForInvoice(lastPaymentData);
+        console.log('Saved pending payment values before clearing bill');
+      } catch (error) {
+        console.warn('Failed to save pending payment values:', error);
+      }
+    }
+
+    // Clear the bill
     setBillItems([]);
     setSelectedCustomer(customers.find((c) => c.id === 'walk-in') || null);
     setPaymentMethod('cash');
@@ -198,14 +277,14 @@ export default function Billing() {
   }, [billItems, billDiscount]);
 
   // Print rough bill WITHOUT saving - just print and keep the page
-  const handlePrintRoughBill = () => {
+  const handlePrintRoughBill = async () => {
     if (billItems.length === 0) {
       toast({ title: 'Error', description: 'Please add items to the bill', variant: 'destructive' });
       return;
     }
 
     // Auto-save as pending bill
-    const pending = savePendingBill(
+    const pending = await savePendingBill(
       billItems, selectedCustomer, paymentMethod, billDiscount, amountPaid,
       endCustomerName, commission, billNotes, activePendingBillId
     );
@@ -258,25 +337,68 @@ export default function Billing() {
     const finalAmountPaid = amountPaid > 0 ? amountPaid : totals.grandTotal;
     const balance = totals.grandTotal - finalAmountPaid;
 
-    const invoice = await addInvoice(
-      {
-        customerId: selectedCustomer.id,
-        customerName: selectedCustomer.name,
-        customerPhone: selectedCustomer.phone,
-        customerType: selectedCustomer.type || 'customer',
-        endCustomerName: isContractor ? endCustomerName.trim() : undefined,
-        commission: isContractor && commission > 0 ? commission : undefined,
-        items: billItems,
-        ...totals,
-        amountPaid: finalAmountPaid,
-        balance: Math.max(0, balance),
-        paymentMethod,
-        status: balance > 0 ? 'pending' : 'paid',
-        billType: 'final',
-      },
-      settings.invoicePrefix
-    );
+    let invoice;
+    try {
+      invoice = await addInvoice(
+        {
+          customerId: selectedCustomer.id,
+          customerName: selectedCustomer.name,
+          customerPhone: selectedCustomer.phone,
+          customerType: selectedCustomer.type || 'customer',
+          endCustomerName: isContractor ? endCustomerName.trim() : undefined,
+          commission: isContractor && commission > 0 ? commission : undefined,
+          items: billItems,
+          ...totals,
+          amountPaid: finalAmountPaid,
+          balance: Math.max(0, balance),
+          paymentMethod,
+          status: balance > 0 ? 'pending' : 'paid',
+          billType: 'final_bill',
+        },
+        settings.invoicePrefix
+      );
+    } catch (error: any) {
+      // Handle specific business errors
+      if (error?.error?.code === 'BUSINESS_ERROR') {
+        if (error.error.message.includes('Insufficient stock')) {
+          toast({
+            title: 'Stock Error',
+            description: error.error.message || 'Insufficient stock for one or more items',
+            variant: 'destructive'
+          });
+        } else {
+          toast({
+            title: 'Business Error',
+            description: error.error.message || 'Cannot complete this transaction',
+            variant: 'destructive'
+          });
+        }
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to create invoice. Please try again.',
+          variant: 'destructive'
+        });
+      }
+      return null;
+    }
 
+    // Save last payment values for all items (except walk-in customers)
+    if (selectedCustomer && selectedCustomer.id !== 'walk-in') {
+      const lastPaymentData = billItems.map(item => ({
+        customerId: selectedCustomer.id,
+        productId: item.productId,
+        productName: item.productName,
+        productCode: item.productCode,
+        lastAmount: item.total,
+        lastQuantity: item.quantity,
+        lastUnitPrice: item.price,
+      }));
+
+      await saveLastPaymentValuesForInvoice(lastPaymentData);
+    }
+
+    // Update price mappings (legacy support)
     updatePriceMappingsFromInvoice(
       selectedCustomer.id,
       billItems.map((item) => ({ productId: item.productId, price: item.price }))
@@ -405,8 +527,7 @@ export default function Billing() {
               customers={customers}
               selectedCustomer={selectedCustomer}
               onSelectCustomer={handleSelectCustomer}
-              onAddCustomer={addCustomer}
-              getCustomerBalance={getCustomerBalance}
+              onAddCustomer={handleAddCustomer}
             />
 
             {isContractor && (
@@ -487,11 +608,10 @@ export default function Billing() {
                 <button
                   key={method.value}
                   onClick={() => setPaymentMethod(method.value)}
-                  className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors ${
-                    paymentMethod === method.value
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'bg-background border-border hover:bg-muted'
-                  }`}
+                  className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors ${paymentMethod === method.value
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'bg-background border-border hover:bg-muted'
+                    }`}
                 >
                   <method.icon size={18} />
                   <span className="text-sm font-medium">{method.label}</span>
@@ -636,7 +756,7 @@ export default function Billing() {
         isOpen={showAddProductModal}
         onClose={() => setShowAddProductModal(false)}
         productName={newProductName}
-        onAddProduct={addProduct}
+        onAddProduct={handleAddProduct}
         onSelectProduct={addProductToBill}
       />
 

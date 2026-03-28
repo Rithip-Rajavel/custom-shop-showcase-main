@@ -166,20 +166,34 @@ export function ProductForm({ isOpen, onClose, product, onSave, onUpdate }: Prod
 
             <div className="col-span-2 space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Input
-                id="category"
+              <Select
                 value={formData.category}
-                onChange={(e) => {
-                  const cat = e.target.value;
+                onValueChange={(value) => {
                   setFormData({
                     ...formData,
-                    category: cat,
-                    pricingType: cat.toLowerCase() === 'glass' ? 'per_sqft' : 'standard',
-                    unit: cat.toLowerCase() === 'glass' ? 'sqft' : formData.unit,
+                    category: value,
+                    pricingType: value.toLowerCase() === 'glass' ? 'per_sqft' : 'standard',
+                    unit: value.toLowerCase() === 'glass' ? 'sqft' : formData.unit,
                   });
                 }}
-                placeholder="Hardware, Plywood, Glass, etc."
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Hardware">Hardware</SelectItem>
+                  <SelectItem value="Glass">Glass</SelectItem>
+                  <SelectItem value="Plywood">Plywood</SelectItem>
+                  <SelectItem value="Plastic">Plastic</SelectItem>
+                  <SelectItem value="Paint">Paint</SelectItem>
+                  <SelectItem value="Electrical">Electrical</SelectItem>
+                  <SelectItem value="Plumbing">Plumbing</SelectItem>
+                  <SelectItem value="Tools">Tools</SelectItem>
+                  <SelectItem value="Fasteners">Fasteners</SelectItem>
+                  <SelectItem value="Sanitary">Sanitary</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {formData.category.toLowerCase() === 'glass' && (

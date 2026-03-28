@@ -217,3 +217,25 @@ export interface PayrollSummary {
   netPayableSalary: number;
   attendanceDetails: Attendance[];
 }
+
+// Last Payment Value - tracks customer-specific pricing
+export interface LastPaymentValue {
+  id: string;
+  customerId: string;
+  productId: string;
+  productName: string;
+  productCode: string;
+  lastAmount: number;
+  lastQuantity: number;
+  lastUnitPrice: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LastPaymentValueRequest {
+  customerId: string;
+  productId: string;
+  lastAmount: number;
+  lastQuantity: number;
+  lastUnitPrice: number;
+}

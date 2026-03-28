@@ -31,6 +31,27 @@ interface FormState {
   notes: string;
 }
 
+// Helper function to convert 24-hour to 12-hour format
+const to12Hour = (hour: number): { hour12: number; period: 'AM' | 'PM' } => {
+  if (hour === 0) return { hour12: 12, period: 'AM' };
+  if (hour < 12) return { hour12: hour, period: 'AM' };
+  if (hour === 12) return { hour12: 12, period: 'PM' };
+  return { hour12: hour - 12, period: 'PM' };
+};
+
+// Helper function to convert 12-hour to 24-hour format
+const to24Hour = (hour12: number, period: 'AM' | 'PM'): number => {
+  if (period === 'AM') {
+    return hour12 === 12 ? 0 : hour12;
+  }
+  return hour12 === 12 ? 12 : hour12 + 12;
+};
+
+// Generate hours for dropdown (1-12)
+const hours12 = Array.from({ length: 12 }, (_, i) => i + 1);
+// Generate minutes for dropdown (0, 15, 30, 45)
+const minutes = [0, 15, 30, 45];
+
 export function AttendanceForm({ isOpen, onClose, onSubmit, attendance, employees }: AttendanceFormProps) {
   const [formData, setFormData] = useState<FormState>({
     employeeId: '',
@@ -134,17 +155,16 @@ export function AttendanceForm({ isOpen, onClose, onSubmit, attendance, employee
     }
   };
 
-  const handleTimeChange = (field: 'checkInTime' | 'checkOutTime', timeField: 'hour' | 'minute', value: string) => {
-    const timeValue = parseInt(value) || 0;
-    const validValue = timeField === 'hour'
-      ? Math.min(23, Math.max(0, timeValue))
-      : Math.min(59, Math.max(0, timeValue));
+  const handleTimeChange = (field: 'checkInTime' | 'checkOutTime', hour12: number, minute: number, period: 'AM' | 'PM') => {
+    const hour24 = to24Hour(hour12, period);
+    const validHour = Math.min(23, Math.max(0, hour24));
+    const validMinute = Math.min(59, Math.max(0, minute));
 
     setFormData((prev) => ({
       ...prev,
       [field]: {
-        ...prev[field]!,
-        [timeField]: validValue,
+        hour: validHour,
+        minute: validMinute,
         second: 0,
         nano: 0,
       },
@@ -228,46 +248,120 @@ export function AttendanceForm({ isOpen, onClose, onSubmit, attendance, employee
               <div className="space-y-2">
                 <Label>Check In Time</Label>
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={formData.checkInTime?.hour || 9}
-                    onChange={(e) => handleTimeChange('checkInTime', 'hour', e.target.value)}
-                    className="w-20"
-                  />
+                  <Select
+                    value={to12Hour(formData.checkInTime?.hour || 9).hour12.toString()}
+                    onValueChange={(value) => {
+                      const hour12 = parseInt(value);
+                      const { period } = to12Hour(formData.checkInTime?.hour || 9);
+                      handleTimeChange('checkInTime', hour12, formData.checkInTime?.minute || 0, period);
+                    }}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hours12.map((hour) => (
+                        <SelectItem key={hour} value={hour.toString()}>
+                          {hour}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <span>:</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={formData.checkInTime?.minute || 0}
-                    onChange={(e) => handleTimeChange('checkInTime', 'minute', e.target.value)}
-                    className="w-20"
-                  />
+                  <Select
+                    value={(formData.checkInTime?.minute || 0).toString()}
+                    onValueChange={(value) => {
+                      const minute = parseInt(value);
+                      const { hour12, period } = to12Hour(formData.checkInTime?.hour || 9);
+                      handleTimeChange('checkInTime', hour12, minute, period);
+                    }}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {minutes.map((minute) => (
+                        <SelectItem key={minute} value={minute.toString()}>
+                          {minute.toString().padStart(2, '0')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={to12Hour(formData.checkInTime?.hour || 9).period}
+                    onValueChange={(value: 'AM' | 'PM') => {
+                      const { hour12 } = to12Hour(formData.checkInTime?.hour || 9);
+                      handleTimeChange('checkInTime', hour12, formData.checkInTime?.minute || 0, value);
+                    }}
+                  >
+                    <SelectTrigger className="w-16">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AM">AM</SelectItem>
+                      <SelectItem value="PM">PM</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Check Out Time</Label>
                 <div className="flex items-center gap-2">
-                  <Input
-                    type="number"
-                    min="0"
-                    max="23"
-                    value={formData.checkOutTime?.hour || 18}
-                    onChange={(e) => handleTimeChange('checkOutTime', 'hour', e.target.value)}
-                    className="w-20"
-                  />
+                  <Select
+                    value={to12Hour(formData.checkOutTime?.hour || 18).hour12.toString()}
+                    onValueChange={(value) => {
+                      const hour12 = parseInt(value);
+                      const { period } = to12Hour(formData.checkOutTime?.hour || 18);
+                      handleTimeChange('checkOutTime', hour12, formData.checkOutTime?.minute || 0, period);
+                    }}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {hours12.map((hour) => (
+                        <SelectItem key={hour} value={hour.toString()}>
+                          {hour}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <span>:</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={formData.checkOutTime?.minute || 0}
-                    onChange={(e) => handleTimeChange('checkOutTime', 'minute', e.target.value)}
-                    className="w-20"
-                  />
+                  <Select
+                    value={(formData.checkOutTime?.minute || 0).toString()}
+                    onValueChange={(value) => {
+                      const minute = parseInt(value);
+                      const { hour12, period } = to12Hour(formData.checkOutTime?.hour || 18);
+                      handleTimeChange('checkOutTime', hour12, minute, period);
+                    }}
+                  >
+                    <SelectTrigger className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {minutes.map((minute) => (
+                        <SelectItem key={minute} value={minute.toString()}>
+                          {minute.toString().padStart(2, '0')}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select
+                    value={to12Hour(formData.checkOutTime?.hour || 18).period}
+                    onValueChange={(value: 'AM' | 'PM') => {
+                      const { hour12 } = to12Hour(formData.checkOutTime?.hour || 18);
+                      handleTimeChange('checkOutTime', hour12, formData.checkOutTime?.minute || 0, value);
+                    }}
+                  >
+                    <SelectTrigger className="w-16">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AM">AM</SelectItem>
+                      <SelectItem value="PM">PM</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
