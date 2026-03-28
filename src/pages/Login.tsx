@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 export default function Login() {
   const navigate = useNavigate();
   const { login, isAuthenticated } = useAuth();
-  
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -24,23 +24,23 @@ export default function Login() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email.trim()) {
       toast.error('Please enter your email');
       return;
     }
-    
+
     if (!password) {
       toast.error('Please enter your password');
       return;
     }
 
     setIsLoading(true);
-    
+
     const result = await login(email, password);
-    
+
     setIsLoading(false);
-    
+
     if (result.success) {
       toast.success('Welcome back!');
       navigate('/', { replace: true });
@@ -51,22 +51,15 @@ export default function Login() {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center">
-      {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-sidebar-background via-sidebar-accent to-sidebar-background">
-        {/* Floating shapes */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-3xl" />
-        
-        {/* Grid pattern overlay */}
-        <div 
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: `linear-gradient(hsl(var(--primary) / 0.1) 1px, transparent 1px),
-                            linear-gradient(90deg, hsl(var(--primary) / 0.1) 1px, transparent 1px)`,
-            backgroundSize: '50px 50px',
-          }}
-        />
+      {/* Background Image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/shivahardware.png')`,
+        }}
+      >
+        {/* Dark overlay for better text visibility */}
+        <div className="absolute inset-0 bg-black/40" />
       </div>
 
       {/* Login Card */}

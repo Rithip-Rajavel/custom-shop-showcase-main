@@ -1,4 +1,4 @@
-const BASE_URL = 'https://app.undefineddevelopers.online/selvahardware';
+const BASE_URL = 'http://localhost:5090/selvahardware';
 const TOKEN_KEY = 'shiva-jwt-token';
 
 function getToken(): string | null {
