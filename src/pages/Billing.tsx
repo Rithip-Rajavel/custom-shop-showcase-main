@@ -130,11 +130,9 @@ export default function Billing() {
 
   const calculateItemBaseAmount = (item: BillItem, price?: number) => {
     const usePrice = price ?? item.price;
-    if (item.pricingType && item.pricingType !== 'standard' && item.height && item.width) {
-      const area = item.pricingType === 'per_sqft'
-        ? item.height * item.width
-        : item.height + item.width;
-      return item.quantity * area * usePrice;
+    if (item.pricingType && item.pricingType !== 'standard' && item.area !== undefined) {
+      // Use direct area value for glass products instead of calculating from height × width
+      return item.area * usePrice; // For area-based pricing, quantity is always 1
     }
     return item.quantity * usePrice;
   };
@@ -164,8 +162,8 @@ export default function Billing() {
       const usePrice = lastPrice ?? product.price;
       const isGlass = product.category?.toLowerCase() === 'glass';
       const pricingType = isGlass ? (product.pricingType || 'per_sqft') : 'standard';
-      const baseAmount = pricingType !== 'standard' ? 0 : usePrice;
-      const gstAmount = (baseAmount * product.gstPercentage) / 100;
+      const baseAmount = pricingType !== 'standard' ? 0 : (usePrice * 1); // For standard pricing, quantity * price
+      const gstAmount = 0; // Default to 0 since withTax is false by default
       const total = baseAmount + gstAmount;
 
       const newItem: BillItem = {
@@ -173,7 +171,7 @@ export default function Billing() {
         productId: product.id,
         productName: product.name,
         productCode: product.code,
-        quantity: 1,
+        quantity: isGlass ? 1 : 1, // Start with 1 for all products
         price: usePrice,
         originalPrice: product.price,
         lastPurchasedPrice: lastPrice,
@@ -200,13 +198,16 @@ export default function Billing() {
         const updatedItem = { ...item, ...updates };
 
         if (updatedItem.pricingType && updatedItem.pricingType !== 'standard') {
-          if (updatedItem.height && updatedItem.width) {
+          // Calculate area from height × width if both are provided
+          // But allow manual area override if area is directly set
+          if (updatedItem.height && updatedItem.width && updatedItem.area === undefined) {
             updatedItem.area = updatedItem.pricingType === 'per_sqft'
               ? updatedItem.height * updatedItem.width
               : updatedItem.height + updatedItem.width;
-          } else {
+          } else if (updatedItem.area === undefined) {
             updatedItem.area = 0;
           }
+          // If area is directly set (manual input), keep that value
         }
 
         const baseAmount = calculateItemBaseAmount(updatedItem);
@@ -224,23 +225,23 @@ export default function Billing() {
   };
 
   const clearBill = async () => {
-    // Save current bill as pending payment before clearing
+    // Save current bill as pending bill before clearing
     if (billItems.length > 0 && selectedCustomer && selectedCustomer.id !== 'walk-in') {
       try {
-        const lastPaymentData = billItems.map(item => ({
-          customerId: selectedCustomer.id,
-          productId: item.productId,
-          productName: item.productName,
-          productCode: item.productCode,
-          lastAmount: item.total,
-          lastQuantity: item.quantity,
-          lastUnitPrice: item.price,
-        }));
-
-        await saveLastPaymentValuesForInvoice(lastPaymentData);
-        console.log('Saved pending payment values before clearing bill');
+        await savePendingBill(
+          billItems,
+          selectedCustomer,
+          paymentMethod,
+          billDiscount,
+          amountPaid,
+          endCustomerName,
+          commission,
+          '', // notes
+          activePendingBillId // existingId to update existing pending bill
+        );
+        console.log('Saved pending bill before clearing bill');
       } catch (error) {
-        console.warn('Failed to save pending payment values:', error);
+        console.warn('Failed to save pending bill:', error);
       }
     }
 
@@ -261,9 +262,12 @@ export default function Billing() {
   };
 
   const calculateTotals = useCallback(() => {
+    console.log('Calculating totals for billItems:', billItems);
     const subtotal = billItems.reduce((sum, item) => {
       if (item.customTotal !== undefined) return sum + item.customTotal;
-      return sum + calculateItemBaseAmount(item);
+      const baseAmount = calculateItemBaseAmount(item);
+      console.log(`Item ${item.productName}: baseAmount = ${baseAmount}, total = ${item.total}`);
+      return sum + baseAmount;
     }, 0);
     const totalGst = billItems.reduce((sum, item) => {
       if (item.customTotal !== undefined) return sum; // GST included in custom total
@@ -273,6 +277,7 @@ export default function Billing() {
     const effectiveDiscount = Math.min(billDiscount, afterGst);
     const grandTotal = Math.max(0, afterGst - effectiveDiscount);
     const discountPercentage = calculateDiscountPercentage(afterGst, effectiveDiscount);
+    console.log('Final totals:', { subtotal, totalGst, grandTotal });
     return { subtotal, totalDiscount: effectiveDiscount, discountPercentage, totalGst, grandTotal, maxDiscount: afterGst };
   }, [billItems, billDiscount]);
 

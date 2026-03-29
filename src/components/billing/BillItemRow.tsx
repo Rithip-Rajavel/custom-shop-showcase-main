@@ -47,13 +47,25 @@ export function BillItemRow({ item, onUpdate, onRemove }: BillItemRowProps) {
 
   const handleHeightChange = (value: string) => {
     const height = parseFloat(value) || 0;
-    onUpdate(item.id, { height, customTotal: undefined });
+    const width = item.width || 0;
+    const calculatedArea = height * width;
+    onUpdate(item.id, { height, area: calculatedArea, customTotal: undefined });
     setIsCustomTotal(false);
   };
 
   const handleWidthChange = (value: string) => {
     const width = parseFloat(value) || 0;
-    onUpdate(item.id, { width, customTotal: undefined });
+    const height = item.height || 0;
+    const calculatedArea = height * width;
+    onUpdate(item.id, { width, area: calculatedArea, customTotal: undefined });
+    setIsCustomTotal(false);
+  };
+
+  const handleAreaChange = (value: string) => {
+    const area = parseFloat(value) || 0;
+    // Don't clear height and width when area is manually entered
+    // Allow users to override the calculated area
+    onUpdate(item.id, { area, customTotal: undefined });
     setIsCustomTotal(false);
   };
 
@@ -132,10 +144,23 @@ export function BillItemRow({ item, onUpdate, onRemove }: BillItemRowProps) {
                     placeholder="0"
                   />
                 </div>
+                <span className="text-xs text-muted-foreground">=</span>
+                <div className="flex items-center gap-1">
+                  <Label className="text-xs text-muted-foreground">Sqft</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={item.area || ''}
+                    onChange={(e) => handleAreaChange(e.target.value)}
+                    className="w-20 h-7 text-xs"
+                    placeholder="0"
+                  />
+                </div>
               </div>
               {item.area !== undefined && item.area > 0 && (
                 <div className="text-xs text-muted-foreground">
-                  = {item.area.toFixed(2)} {item.pricingType === 'per_sqft' ? 'sqft' : 'rft'}
+                  = {item.area.toFixed(2)} sqft
                   {' '}× {formatCurrency(item.price)} = {formatCurrency(item.area * item.price)}
                 </div>
               )}
@@ -143,13 +168,24 @@ export function BillItemRow({ item, onUpdate, onRemove }: BillItemRowProps) {
           )}
         </td>
         <td className="p-3 text-center">
-          <Input
-            type="number"
-            min="1"
-            value={item.quantity}
-            onChange={(e) => handleQuantityChange(e.target.value)}
-            className="w-20 h-8 text-center mx-auto"
-          />
+          {isAreaBased ? (
+            <div className="text-center">
+              <div className="font-medium text-sm">
+                {item.area && item.area > 0 ? item.area.toFixed(2) : '0'}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {item.pricingType === 'per_sqft' ? 'sqft' : 'rft'}
+              </div>
+            </div>
+          ) : (
+            <Input
+              type="number"
+              min="1"
+              value={item.quantity}
+              onChange={(e) => handleQuantityChange(e.target.value)}
+              className="w-20 h-8 text-center mx-auto"
+            />
+          )}
         </td>
         <td className="p-3 text-right">
           <div className="flex items-center justify-end gap-1">
