@@ -15,6 +15,7 @@ import Invoices from "./pages/Invoices";
 import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
 import Bonus from "./pages/Bonus";
+import UserManagement from "./pages/UserManagement";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Admin from "./pages/Admin";
@@ -74,6 +75,11 @@ const App = () => (
             <Route path="/bonus" element={
               <ProtectedRoute requiredPermission="admin">
                 <Bonus />
+              </ProtectedRoute>
+            } />
+            <Route path="/users" element={
+              <ProtectedRoute requiredPermission="admin">
+                <UserManagement />
               </ProtectedRoute>
             } />
             <Route path="/reports" element={

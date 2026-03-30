@@ -18,6 +18,7 @@ import {
   UserCheck,
   Calendar,
   DollarSign,
+  UserPlus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, ROLE_PERMISSIONS } from '@/contexts/AuthContext';
@@ -32,6 +33,7 @@ const navItems = [
   { to: '/employees', label: 'Employees', icon: UserCheck, permission: 'employees' },
   { to: '/attendance', label: 'Attendance', icon: Calendar, permission: 'attendance' },
   { to: '/bonus', label: 'Bonus Management', icon: DollarSign, permission: 'admin' },
+  { to: '/users', label: 'User Management', icon: UserPlus, permission: 'admin' },
   { to: '/reports', label: 'Reports', icon: BarChart3, permission: 'reports' },
   { to: '/admin', label: 'Admin', icon: UserCog, permission: 'admin' },
   { to: '/settings', label: 'Settings', icon: Settings, permission: 'settings' },

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { apiGet, apiPost, setToken, clearToken } from '@/lib/api';
-
-export type UserRole = 'admin' | 'staff';
+import { UserRole } from '@/types/user';
 
 export interface AuthUser {
   id: string;
@@ -28,7 +27,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Role permissions
 export const ROLE_PERMISSIONS = {
-  admin: [
+  [UserRole.superadmin]: [
     'dashboard',
     'billing',
     'products',
@@ -40,7 +39,7 @@ export const ROLE_PERMISSIONS = {
     'admin',
     'settings',
   ],
-  staff: [
+  [UserRole.admin]: [
     'dashboard',
     'billing',
     'products',
@@ -49,6 +48,54 @@ export const ROLE_PERMISSIONS = {
     'employees',
     'attendance',
     'reports',
+    'admin',
+    'settings',
+  ],
+  [UserRole.owner]: [
+    'dashboard',
+    'billing',
+    'products',
+    'customers',
+    'invoices',
+    'employees',
+    'attendance',
+    'reports',
+    'settings',
+  ],
+  [UserRole.manager]: [
+    'dashboard',
+    'billing',
+    'products',
+    'customers',
+    'invoices',
+    'employees',
+    'attendance',
+    'reports',
+  ],
+  [UserRole.accountant]: [
+    'dashboard',
+    'billing',
+    'customers',
+    'invoices',
+    'reports',
+  ],
+  [UserRole.staff]: [
+    'dashboard',
+    'billing',
+    'products',
+    'customers',
+    'invoices',
+    'employees',
+    'attendance',
+    'reports',
+  ],
+  [UserRole.employee]: [
+    'dashboard',
+    'billing',
+    'products',
+    'customers',
+    'invoices',
+    'attendance',
   ],
 };
 
@@ -104,7 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const hasPermission = (requiredRole: UserRole | UserRole[]): boolean => {
     if (!user) return false;
     const roles = Array.isArray(requiredRole) ? requiredRole : [requiredRole];
-    return roles.includes(user.role) || user.role === 'admin';
+    // Super admin has access to everything
+    if (user.role === UserRole.superadmin) return true;
+    // Admin has access to most things except super admin only features
+    if (user.role === UserRole.admin) return true;
+    // Check if user's role is in the required roles
+    return roles.includes(user.role);
   };
 
   return (

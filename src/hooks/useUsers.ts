@@ -1,76 +1,106 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User } from '@/types';
+import { User, UserRequest, UserUpdateRequest, UserRole } from '@/types/user';
 import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchUsers = useCallback(async () => {
+  // Fetch all users
+  const fetchUsers = useCallback(async (): Promise<User[]> => {
     setIsLoading(true);
     setError(null);
     try {
       const data = await apiGet<User[]>('/api/users');
-      // Map API field `active` to local field `isActive`
-      const mapped = (data ?? []).map((u: User & { active?: boolean }) => ({
-        ...u,
-        isActive: u.active ?? u.isActive ?? true,
-      }));
-      setUsers(mapped);
+      setUsers(data ?? []);
+      return data ?? [];
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load users');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load users';
+      setError(errorMessage);
+      throw new Error(errorMessage);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // Create new user with password
+  const createUser = useCallback(async (
+    name: string,
+    email: string,
+    password: string,
+    role: UserRole,
+    phone: string
+  ): Promise<User> => {
+    const payload: UserRequest = {
+      name,
+      email,
+      password,
+      role,
+      phone,
+    };
+
+    try {
+      const data = await apiPost<User>('/api/users', payload);
+      setUsers(prev => [data, ...prev]);
+      return data;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to create user');
+    }
+  }, []);
+
+  // Update user
+  const updateUser = useCallback(async (
+    id: string,
+    updates: UserUpdateRequest
+  ): Promise<User> => {
+    try {
+      const data = await apiPut<User>(`/api/users/${id}`, updates);
+      setUsers(prev => prev.map(user =>
+        user.id === id ? data : user
+      ));
+      return data;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to update user');
+    }
+  }, []);
+
+  // Delete user
+  const deleteUser = useCallback(async (id: string): Promise<void> => {
+    try {
+      await apiDelete(`/api/users/${id}`);
+      setUsers(prev => prev.filter(user => user.id !== id));
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to delete user');
+    }
+  }, []);
+
+  // Toggle user active status
+  const toggleUserStatus = useCallback(async (id: string): Promise<User> => {
+    try {
+      const user = users.find(u => u.id === id);
+      if (!user) throw new Error('User not found');
+
+      const updatedUser = await updateUser(id, {
+        active: !user.active
+      } as any);
+
+      return updatedUser;
+    } catch (err) {
+      throw new Error(err instanceof Error ? err.message : 'Failed to update user status');
+    }
+  }, [users, updateUser]);
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
-
-  const addUser = async (user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>): Promise<User> => {
-    const payload = {
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-      // Password not in User type — caller must pass via a separate mechanism if needed
-    };
-    const newUser = await apiPost<User>('/api/users', payload);
-    setUsers((prev) => [...prev, { ...newUser, isActive: (newUser as User & { active?: boolean }).active ?? true }]);
-    return newUser;
-  };
-
-  const updateUser = async (id: string, updates: Partial<User>): Promise<User> => {
-    const updated = await apiPut<User>(`/api/users/${id}`, updates);
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? { ...u, ...updated, isActive: (updated as User & { active?: boolean }).active ?? updated.isActive ?? u.isActive }
-          : u
-      )
-    );
-    return updated;
-  };
-
-  const deleteUser = async (id: string): Promise<void> => {
-    await apiDelete(`/api/users/${id}`);
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-  };
-
-  const toggleUserStatus = async (id: string): Promise<void> => {
-    const user = users.find((u) => u.id === id);
-    if (!user) return;
-    await updateUser(id, { isActive: !user.isActive });
-  };
 
   return {
     users,
     isLoading,
     error,
     fetchUsers,
-    addUser,
+    createUser,
     updateUser,
     deleteUser,
     toggleUserStatus,
