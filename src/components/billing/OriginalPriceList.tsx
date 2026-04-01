@@ -17,9 +17,9 @@ interface OriginalPriceListProps {
 export function OriginalPriceList({ items }: OriginalPriceListProps) {
   if (items.length === 0) return null;
 
-  const totalOriginal = items.reduce((sum, item) => sum + item.quantity * item.originalPrice, 0);
+  const totalOriginal = items.reduce((sum, item) => sum + item.quantity * (item.originalPrice || 0), 0);
   const totalCurrent = items.reduce((sum, item) => sum + item.quantity * item.price, 0);
-  const difference = totalOriginal - totalCurrent;
+  const difference = totalCurrent - totalOriginal;
 
   return (
     <Dialog>
@@ -76,7 +76,7 @@ export function OriginalPriceList({ items }: OriginalPriceListProps) {
               </tr>
               <tr>
                 <td colSpan={4} className="p-2 text-right font-semibold">
-                  {difference >= 0 ? 'Margin:' : 'Loss:'}
+                  {difference >= 0 ? 'Profit Margin:' : 'Loss:'}
                 </td>
                 <td className={`p-2 text-right font-bold ${difference >= 0 ? 'text-green-600' : 'text-destructive'}`}>
                   {difference >= 0 ? '+' : ''}{formatCurrency(difference)}

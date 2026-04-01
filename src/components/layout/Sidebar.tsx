@@ -7,18 +7,16 @@ import {
   Users,
   FileText,
   Settings,
-  UserCog,
+  UserCheck,
   Menu,
   X,
-  Hammer,
   BarChart3,
   LogOut,
   Shield,
   User,
-  UserCheck,
   Calendar,
-  DollarSign,
   UserPlus,
+  Building,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, ROLE_PERMISSIONS } from '@/contexts/AuthContext';
@@ -31,11 +29,10 @@ const navItems = [
   { to: '/customers', label: 'Customers & Contractors', icon: Users, permission: 'customers' },
   { to: '/invoices', label: 'Invoices', icon: FileText, permission: 'invoices' },
   { to: '/employees', label: 'Employees', icon: UserCheck, permission: 'employees' },
-  { to: '/attendance', label: 'Attendance', icon: Calendar, permission: 'attendance' },
-  { to: '/bonus', label: 'Bonus Management', icon: DollarSign, permission: 'admin' },
+  { to: '/attendance', label: 'Mark Attendance', icon: Calendar, permission: 'attendance' },
+  { to: '/employee-attendance', label: 'View Attendance', icon: Calendar, permission: 'attendance' },
   { to: '/users', label: 'User Management', icon: UserPlus, permission: 'admin' },
   { to: '/reports', label: 'Reports', icon: BarChart3, permission: 'reports' },
-  { to: '/admin', label: 'Admin', icon: UserCog, permission: 'admin' },
   { to: '/settings', label: 'Settings', icon: Settings, permission: 'settings' },
 ];
 
@@ -84,7 +81,7 @@ export function Sidebar() {
           <div className="p-6 border-b border-sidebar-border">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Hammer className="w-6 h-6 text-primary-foreground" />
+                <Building className="w-6 h-6 text-primary-foreground" />
               </div>
               <div>
                 <h1 className="font-bold text-sidebar-foreground text-sm leading-tight">

@@ -3,6 +3,8 @@ export interface Product {
   name: string;
   code: string;
   barcode: string;
+  originalAmount: number; // Cost price - what we pay to get the product
+  sellingAmount: number; // Selling price - what customers pay
   price: number;
   stock: number;
   unit: string;
@@ -210,6 +212,7 @@ export interface PayrollSummary {
   halfDays: number;
   leaveDays: number;
   holidayDays: number;
+  allowedLeaves?: number; // Number of allowed leaves for the month
   monthlySalary: number;
   perDaySalary: number;
   lossOfPayDays: number;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, Receipt, Clock, HardHat, Eye, DollarSign } from 'lucide-react';
+import { ArrowLeft, FileText, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, Receipt, Clock, HardHat, Eye, DollarSign, Trash2 } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,9 @@ import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices } from '@/hooks/useInvoices';
 import { usePayments } from '@/hooks/usePayments';
 import { useCommissions } from '@/hooks/useCommissions';
+import { useBonuses } from '@/hooks/useBonuses';
 import { AddPaymentModal } from '@/components/customers/AddPaymentModal';
+import { BonusModal, BonusData } from '@/components/customers/BonusModal';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
 import { PaymentMethod } from '@/types';
 import { toast } from 'sonner';
@@ -21,11 +23,15 @@ export default function CustomerLedger() {
   const { getInvoicesByCustomer, getCustomerBalance, applyPaymentToInvoices, invoices } = useInvoices();
   const { getCustomerTransactions, addPaymentTransaction } = usePayments();
   const { getContractorCommissions, getTotalCommission } = useCommissions();
+  const { bonuses, createBonus, deleteBonus, getBonusesByCustomer, getTotalBonusByCustomerAndYear } = useBonuses();
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentForInvoiceId, setPaymentForInvoiceId] = useState<string | null>(null);
   const [customerBalance, setCustomerBalance] = useState<any>(null);
   const [totalCommission, setTotalCommission] = useState<number>(0);
+  const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
+  const [isAddingBonus, setIsAddingBonus] = useState(false);
+  const [totalBonus, setTotalBonus] = useState<number>(0);
 
   const customer = customers.find((c) => c.id === customerId);
   const isContractor = customer?.type === 'contractor';
@@ -33,9 +39,10 @@ export default function CustomerLedger() {
   const transactions = customerId ? getCustomerTransactions(customerId) : [];
   const commissions = customerId && isContractor ? getContractorCommissions(customerId) : [];
 
-  // Fetch customer balance from API
+  // Fetch customer balance and bonuses from API
   useEffect(() => {
     if (customerId) {
+      // Fetch balance
       apiGet(`/api/customers/${customerId}/balance`)
         .then((data) => {
           setCustomerBalance(data);
@@ -46,10 +53,70 @@ export default function CustomerLedger() {
           const fallbackBalance = getCustomerBalance(customerId);
           setCustomerBalance(fallbackBalance);
         });
+
+      // Fetch bonuses
+      getBonusesByCustomer(customerId);
+
+      // Fetch annual total bonus
+      getTotalBonusByCustomerAndYear(customerId, new Date().getFullYear())
+        .then(setTotalBonus)
+        .catch(console.error);
     }
   }, [customerId]);
 
-  // Fetch total commission for contractors
+  const handleBonusSubmit = async (bonusData: BonusData) => {
+    if (!customerId) return;
+
+    setIsAddingBonus(true);
+    try {
+      const bonusDate = new Date(bonusData.date);
+      const month = bonusDate.getMonth() + 1;
+      const year = bonusDate.getFullYear();
+
+      await createBonus(
+        customerId,
+        bonusData.amount,
+        month,
+        year,
+        bonusData.reason + (bonusData.notes ? ` (${bonusData.notes})` : '')
+      );
+
+      // Refresh total bonus
+      const total = await getTotalBonusByCustomerAndYear(customerId, new Date().getFullYear());
+      setTotalBonus(total);
+
+      toast.success('Bonus added successfully!');
+      setIsBonusModalOpen(false);
+    } catch (error) {
+      console.error('Failed to add bonus:', error);
+      toast.error('Failed to add bonus');
+    } finally {
+      setIsAddingBonus(false);
+    }
+  };
+
+  const handleDeleteBonus = async (bonusId: string) => {
+    if (!confirm('Are you sure you want to delete this bonus?')) return;
+
+    try {
+      await deleteBonus(bonusId);
+      // Refresh total bonus
+      if (customerId) {
+        const total = await getTotalBonusByCustomerAndYear(customerId, new Date().getFullYear());
+        setTotalBonus(total);
+      }
+      toast.success('Bonus deleted successfully');
+    } catch (error) {
+      console.error('Failed to delete bonus:', error);
+      toast.error('Failed to delete bonus');
+    }
+  };
+
+  const handleAddBonus = () => {
+    console.log('Opening bonus modal for:', customer?.name);
+    setIsBonusModalOpen(true);
+  };
+
   useEffect(() => {
     if (customerId && isContractor) {
       getTotalCommission(customerId)
@@ -172,7 +239,7 @@ export default function CustomerLedger() {
       </div>
 
       {/* Summary Cards */}
-      <div className={`grid grid-cols-1 gap-4 mb-6 ${isContractor ? 'md:grid-cols-5' : 'md:grid-cols-4'}`}>
+      <div className={`grid grid-cols-1 gap-4 mb-6 ${isContractor ? 'md:grid-cols-6' : 'md:grid-cols-5'}`}>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center">
@@ -224,6 +291,18 @@ export default function CustomerLedger() {
           </div>
         </div>
 
+        <div className="bg-card border border-green-500/20 rounded-xl p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-green-500/10 flex items-center justify-center">
+              <TrendingUp className="w-5 h-5 text-green-500" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Bonus</p>
+              <p className="text-xl font-bold text-green-600">{formatCurrency(totalBonus || 0)}</p>
+            </div>
+          </div>
+        </div>
+
         {isContractor && (
           <div className="bg-card border border-amber-500/20 rounded-xl p-4">
             <div className="flex items-center gap-3">
@@ -256,6 +335,10 @@ export default function CustomerLedger() {
               Commissions
             </TabsTrigger>
           )}
+          <TabsTrigger value="bonus" className="gap-2">
+            <TrendingUp size={16} />
+            Bonus
+          </TabsTrigger>
         </TabsList>
 
         {/* Invoices Tab - with per-invoice payment */}
@@ -461,6 +544,73 @@ export default function CustomerLedger() {
             </div>
           </TabsContent>
         )}
+
+        {/* Bonus Tab (All Customers) */}
+        <TabsContent value="bonus">
+          <div className="bg-card border border-green-500/20 rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-green-500" />
+                  Bonus Management
+                </h3>
+                <Button size="sm" className="gap-2" onClick={handleAddBonus}>
+                  <Plus className="w-4 h-4" />
+                  Add Bonus
+                </Button>
+              </div>
+            </div>
+
+            {bonuses.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Period</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Reason</th>
+                      <th className="text-right p-3 text-sm font-medium text-muted-foreground">Amount</th>
+                      <th className="text-center p-3 text-sm font-medium text-muted-foreground">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {bonuses.map((bonus) => (
+                      <tr key={bonus.id} className="border-t border-border hover:bg-muted/30">
+                        <td className="p-3 text-sm">
+                          {new Date(bonus.bonusYear, bonus.bonusMonth - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}
+                        </td>
+                        <td className="p-3 text-sm">{bonus.reason}</td>
+                        <td className="p-3 text-sm text-right font-bold text-green-600">{formatCurrency(bonus.bonusAmount)}</td>
+                        <td className="p-3 text-center">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-destructive"
+                            onClick={() => handleDeleteBonus(bonus.id)}
+                          >
+                            <Trash2 size={14} />
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-8">
+                <div className="flex flex-col items-center justify-center text-muted-foreground">
+                  <TrendingUp className="w-12 h-12 mb-4" />
+                  <p className="text-lg font-medium mb-2">No bonus payments recorded yet</p>
+                  <p className="text-sm">
+                    {isContractor
+                      ? "Add bonus payments for exceptional performance or special occasions"
+                      : "Add bonus payments for loyal customers or special occasions"
+                    }
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Payment Modal */}
@@ -470,6 +620,15 @@ export default function CustomerLedger() {
         customerName={`${customer.name}${selectedInvoiceForPayment?.endCustomerName ? ` → ${selectedInvoiceForPayment.endCustomerName}` : ''}`}
         currentBalance={selectedInvoiceForPayment ? (selectedInvoiceForPayment.balance || 0) : displayBalance}
         onSubmit={handlePaymentSubmit}
+      />
+
+      {/* Bonus Modal */}
+      <BonusModal
+        isOpen={isBonusModalOpen}
+        onClose={() => setIsBonusModalOpen(false)}
+        onSubmit={handleBonusSubmit}
+        customerName={customer?.name}
+        isLoading={isAddingBonus}
       />
     </MainLayout>
   );

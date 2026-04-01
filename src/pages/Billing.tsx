@@ -96,7 +96,8 @@ export default function Billing() {
           try {
             const lastPaymentValue = await getLastPaymentValue(customer.id, item.productId);
             const lastPrice = lastPaymentValue?.lastUnitPrice;
-            const price = lastPrice ?? item.originalPrice;
+            const product = products.find((p) => p.id === item.productId);
+            const price = lastPrice ?? product?.price ?? item.price;
             const baseAmount = calculateItemBaseAmount(item, price);
             const gstAmount = item.withTax ? (baseAmount * item.gstPercentage) / 100 : 0;
             return {
@@ -108,8 +109,9 @@ export default function Billing() {
               total: baseAmount + gstAmount,
             };
           } catch (error) {
-            // Fallback to original price if fetch fails
-            const price = item.originalPrice;
+            // Fallback to current item price or product price if fetch fails
+            const product = products.find((p) => p.id === item.productId);
+            const price = product?.price ?? item.price;
             const baseAmount = calculateItemBaseAmount(item, price);
             const gstAmount = item.withTax ? (baseAmount * item.gstPercentage) / 100 : 0;
             return {
@@ -159,7 +161,7 @@ export default function Billing() {
         }
       }
 
-      const usePrice = lastPrice ?? product.price;
+      const usePrice = product.price; // Use the current product's selling price by default
       const isGlass = product.category?.toLowerCase() === 'glass';
       const pricingType = isGlass ? (product.pricingType || 'per_sqft') : 'standard';
       const baseAmount = pricingType !== 'standard' ? 0 : (usePrice * 1); // For standard pricing, quantity * price
@@ -173,7 +175,7 @@ export default function Billing() {
         productCode: product.code,
         quantity: isGlass ? 1 : 1, // Start with 1 for all products
         price: usePrice,
-        originalPrice: product.price,
+        originalPrice: product.originalAmount, // Cost price
         lastPurchasedPrice: lastPrice,
         gstPercentage: product.gstPercentage,
         withTax: false,

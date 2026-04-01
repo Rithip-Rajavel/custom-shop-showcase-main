@@ -27,7 +27,9 @@ export function ProductForm({ isOpen, onClose, product, onSave, onUpdate }: Prod
     name: '',
     code: '',
     barcode: '',
-    price: 0,
+    price: 0, // This will be the selling amount
+    sellingAmount: 0, // Selling price - what customers pay
+    originalAmount: 0, // Cost price
     stock: 0,
     unit: 'piece',
     gstPercentage: settings.defaultGstPercentage,
@@ -42,7 +44,9 @@ export function ProductForm({ isOpen, onClose, product, onSave, onUpdate }: Prod
         name: product.name,
         code: product.code,
         barcode: product.barcode,
-        price: product.price,
+        price: product.price, // Selling price
+        sellingAmount: product.sellingAmount || product.price, // Selling price
+        originalAmount: product.originalAmount, // Cost price
         stock: product.stock,
         unit: product.unit,
         gstPercentage: product.gstPercentage,
@@ -55,7 +59,9 @@ export function ProductForm({ isOpen, onClose, product, onSave, onUpdate }: Prod
         name: '',
         code: '',
         barcode: '',
-        price: 0,
+        price: 0, // Selling price
+        sellingAmount: 0,
+        originalAmount: 0, // Cost price
         stock: 0,
         unit: 'piece',
         gstPercentage: settings.defaultGstPercentage,
@@ -117,15 +123,32 @@ export function ProductForm({ isOpen, onClose, product, onSave, onUpdate }: Prod
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="price">Price (₹) *</Label>
+              <Label htmlFor="price">Selling Price (₹) *</Label>
               <Input
                 id="price"
                 type="number"
                 min="0"
                 step="0.01"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value) || 0;
+                  setFormData({ ...formData, price: val, sellingAmount: val });
+                }}
+                placeholder="Enter selling price"
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="originalAmount">Cost Price (₹)</Label>
+              <Input
+                id="originalAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.originalAmount}
+                onChange={(e) => setFormData({ ...formData, originalAmount: parseFloat(e.target.value) || 0 })}
+                placeholder="Enter cost price (optional)"
               />
             </div>
 

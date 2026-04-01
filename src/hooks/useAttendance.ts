@@ -42,6 +42,21 @@ export function useAttendance() {
     }
   }, []);
 
+  // Get entire month attendance for an employee
+  const fetchMonthlyAttendance = useCallback(async (employeeId: string, year: number, month: number) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await apiGet<Attendance[]>(`/api/attendance/employee/${employeeId}/monthly/${year}/${month}`);
+      return data || [];
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load monthly attendance');
+      return [];
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAttendance();
   }, [fetchAttendance]);
@@ -75,8 +90,12 @@ export function useAttendance() {
     return attendance.filter((att) => att.attendanceDate === date);
   };
 
-  const getPayrollSummary = async (employeeId: string, year: number, month: number): Promise<PayrollSummary> => {
-    return await apiGet<PayrollSummary>(`/api/attendance/payroll/${employeeId}`, { year, month });
+  const getPayrollSummary = async (employeeId: string, year: number, month: number, allowedLeaves?: number): Promise<PayrollSummary> => {
+    const params: any = { year, month };
+    if (allowedLeaves !== undefined) {
+      params.allowedLeaves = allowedLeaves;
+    }
+    return await apiGet<PayrollSummary>(`/api/attendance/payroll/${employeeId}`, params);
   };
 
   // New specific API functions
@@ -93,6 +112,7 @@ export function useAttendance() {
     isLoading,
     error,
     fetchAttendance,
+    fetchMonthlyAttendance,
     markAttendance,
     deleteAttendance,
     getAttendanceByEmployee,

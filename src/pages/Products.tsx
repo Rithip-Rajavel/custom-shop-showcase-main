@@ -31,12 +31,12 @@ export default function Products() {
 
   const filteredProducts = searchQuery
     ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.barcode.includes(searchQuery) ||
-          p.category.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (p) =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.barcode.includes(searchQuery) ||
+        p.category.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : products;
 
   const handleAddProduct = (product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>) => {
@@ -150,8 +150,12 @@ export default function Products() {
 
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Price</span>
-                  <span className="font-semibold text-primary">{formatCurrency(product.price)}</span>
+                  <span className="text-muted-foreground">Selling Price</span>
+                  <span className="font-semibold text-green-600">{formatCurrency(product.price)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Cost Price</span>
+                  <span className="font-semibold text-amber-600">{formatCurrency(product.originalAmount)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Stock</span>

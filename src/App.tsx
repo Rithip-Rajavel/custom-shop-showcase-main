@@ -14,11 +14,10 @@ import CustomerLedger from "./pages/CustomerLedger";
 import Invoices from "./pages/Invoices";
 import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
-import Bonus from "./pages/Bonus";
+import EmployeeAttendance from "./pages/EmployeeAttendance";
 import UserManagement from "./pages/UserManagement";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
-import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -72,9 +71,9 @@ const App = () => (
                 <Attendance />
               </ProtectedRoute>
             } />
-            <Route path="/bonus" element={
-              <ProtectedRoute requiredPermission="admin">
-                <Bonus />
+            <Route path="/employee-attendance" element={
+              <ProtectedRoute requiredPermission="attendance">
+                <EmployeeAttendance />
               </ProtectedRoute>
             } />
             <Route path="/users" element={
@@ -90,11 +89,6 @@ const App = () => (
             <Route path="/settings" element={
               <ProtectedRoute requiredPermission="settings">
                 <Settings />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin" element={
-              <ProtectedRoute requiredPermission="admin">
-                <Admin />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

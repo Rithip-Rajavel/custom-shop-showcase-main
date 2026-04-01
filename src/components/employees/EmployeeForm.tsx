@@ -67,9 +67,10 @@ export function EmployeeForm({ isOpen, onClose, onSubmit, employee }: EmployeeFo
       newErrors.name = 'Name is required';
     }
 
-    if (!formData.code.trim()) {
-      newErrors.code = 'Employee code is required';
-    }
+    // Code is now optional
+    // if (!formData.code.trim()) {
+    //   newErrors.code = 'Employee code is required';
+    // }
 
     if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
@@ -77,19 +78,20 @@ export function EmployeeForm({ isOpen, onClose, onSubmit, employee }: EmployeeFo
       newErrors.phone = 'Phone number must be 10 digits';
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    // Email is now optional, but validate if provided
+    if (formData.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
 
-    if (!formData.designation.trim()) {
-      newErrors.designation = 'Designation is required';
-    }
+    // Designation is now optional
+    // if (!formData.designation.trim()) {
+    //   newErrors.designation = 'Designation is required';
+    // }
 
-    if (!formData.department.trim()) {
-      newErrors.department = 'Department is required';
-    }
+    // Department is now optional
+    // if (!formData.department.trim()) {
+    //   newErrors.department = 'Department is required';
+    // }
 
     if (!formData.dateOfJoining) {
       newErrors.dateOfJoining = 'Date of joining is required';
@@ -143,12 +145,12 @@ export function EmployeeForm({ isOpen, onClose, onSubmit, employee }: EmployeeFo
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="code">Employee Code *</Label>
+              <Label htmlFor="code">Employee Code</Label>
               <Input
                 id="code"
                 value={formData.code}
                 onChange={(e) => handleInputChange('code', e.target.value)}
-                placeholder="e.g., EMP001"
+                placeholder="e.g., EMP001 (optional)"
                 className={errors.code ? 'border-destructive' : ''}
               />
               {errors.code && (
@@ -174,13 +176,13 @@ export function EmployeeForm({ isOpen, onClose, onSubmit, employee }: EmployeeFo
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                placeholder="employee@example.com"
+                placeholder="employee@example.com (optional)"
                 className={errors.email ? 'border-destructive' : ''}
               />
               {errors.email && (
@@ -191,12 +193,12 @@ export function EmployeeForm({ isOpen, onClose, onSubmit, employee }: EmployeeFo
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="designation">Designation *</Label>
+              <Label htmlFor="designation">Designation</Label>
               <Input
                 id="designation"
                 value={formData.designation}
                 onChange={(e) => handleInputChange('designation', e.target.value)}
-                placeholder="e.g., Manager, Developer"
+                placeholder="e.g., Manager, Developer (optional)"
                 className={errors.designation ? 'border-destructive' : ''}
               />
               {errors.designation && (
@@ -205,12 +207,12 @@ export function EmployeeForm({ isOpen, onClose, onSubmit, employee }: EmployeeFo
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="department">Department *</Label>
+              <Label htmlFor="department">Department</Label>
               <Input
                 id="department"
                 value={formData.department}
                 onChange={(e) => handleInputChange('department', e.target.value)}
-                placeholder="e.g., IT, Sales, HR"
+                placeholder="e.g., IT, Sales, HR (optional)"
                 className={errors.department ? 'border-destructive' : ''}
               />
               {errors.department && (
