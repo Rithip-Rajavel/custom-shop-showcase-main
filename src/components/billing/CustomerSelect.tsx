@@ -20,6 +20,7 @@ interface CustomerSelectProps {
   onSelectCustomer: (customer: Customer) => void;
   onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => Customer;
   getCustomerBalance?: (customerId: string) => { pendingBalance: number } | null;
+  contractors?: Customer[]; // List of contractors to link customer to
 }
 
 export function CustomerSelect({
@@ -28,6 +29,7 @@ export function CustomerSelect({
   onSelectCustomer,
   onAddCustomer,
   getCustomerBalance,
+  contractors = [],
 }: CustomerSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -39,6 +41,7 @@ export function CustomerSelect({
     email: '',
     address: '',
     type: 'customer' as 'customer' | 'contractor',
+    contractorId: '',
   });
 
   const filteredCustomers = customers.filter((c) => {
@@ -51,9 +54,13 @@ export function CustomerSelect({
 
   const handleAddCustomer = () => {
     if (!newCustomer.name) return;
-    const customer = onAddCustomer(newCustomer);
+    const customerData = {
+      ...newCustomer,
+      contractorId: newCustomer.contractorId || undefined,
+    };
+    const customer = onAddCustomer(customerData);
     onSelectCustomer(customer);
-    setNewCustomer({ name: '', phone: '', email: '', address: '', type: 'customer' });
+    setNewCustomer({ name: '', phone: '', email: '', address: '', type: 'customer', contractorId: '' });
     setIsAddingNew(false);
     setIsOpen(false);
   };
@@ -108,7 +115,7 @@ export function CustomerSelect({
                 <Label>Type</Label>
                 <Select
                   value={newCustomer.type}
-                  onValueChange={(v) => setNewCustomer({ ...newCustomer, type: v as 'customer' | 'contractor' })}
+                  onValueChange={(v) => setNewCustomer({ ...newCustomer, type: v as 'customer' | 'contractor', contractorId: '' })}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -119,6 +126,32 @@ export function CustomerSelect({
                   </SelectContent>
                 </Select>
               </div>
+
+              {/* Show contractor selection only for customers (not contractors) */}
+              {newCustomer.type === 'customer' && contractors.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Link to Contractor (Optional)</Label>
+                  <Select
+                    value={newCustomer.contractorId || '_none_'}
+                    onValueChange={(v) => setNewCustomer({ ...newCustomer, contractorId: v === '_none_' ? '' : v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a contractor (optional)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_none_">No Contractor</SelectItem>
+                      {contractors.map((contractor) => (
+                        <SelectItem key={contractor.id} value={contractor.id}>
+                          {contractor.name} ({contractor.phone})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Link this customer to a contractor for contractor-managed billing
+                  </p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="name">Name *</Label>
                 <Input

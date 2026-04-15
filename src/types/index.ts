@@ -24,8 +24,24 @@ export interface Customer {
   email?: string;
   address?: string;
   type: 'customer' | 'contractor';
+  contractorId?: string; // For customers linked to a contractor
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CustomerRequest {
+  name: string;
+  phone: string;
+  email?: string;
+  address?: string;
+  type: 'customer' | 'contractor';
+  contractorId?: string; // For customers linked to a contractor
+}
+
+export interface CustomerFilter {
+  type?: 'customer' | 'contractor';
+  search?: string;
+  contractorId?: string;
 }
 
 export interface BillItem {
@@ -61,6 +77,9 @@ export interface Invoice {
   customerType: 'customer' | 'contractor';
   endCustomerName?: string;
   commission?: number;
+  // Contractor fields for contractor buying for customer scenario
+  contractorId?: string;
+  contractorName?: string;
   items: BillItem[];
   subtotal: number;
   totalDiscount: number;
@@ -241,4 +260,143 @@ export interface LastPaymentValueRequest {
   lastAmount: number;
   lastQuantity: number;
   lastUnitPrice: number;
+}
+
+// Quotation types
+export interface QuotationItem {
+  id: string;
+  productId: string;
+  productName: string;
+  productCode: string;
+  unitPrice: number;
+  quantity: number;
+  unit: string;
+  gstPercentage: number;
+  discount: number;
+  description?: string;
+}
+
+export interface Quotation {
+  id: string;
+  quotationNumber: string;
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  customerType: 'customer' | 'contractor';
+  endCustomerName?: string;
+  commission?: number;
+  // Contractor fields for contractor buying for customer scenario
+  contractorId?: string;
+  contractorName?: string;
+  items: QuotationItem[];
+  subtotal: number;
+  totalDiscount: number;
+  totalGst: number;
+  grandTotal: number;
+  validUntil: string;
+  status: 'pending' | 'confirmed' | 'converted' | 'cancelled';
+  notes?: string;
+  termsConditions?: string;
+  createdAt: string;
+  updatedAt: string;
+  convertedAt?: string;
+  convertedToInvoiceId?: string;
+}
+
+export interface CreateQuotationRequest {
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  customerType: 'customer' | 'contractor';
+  endCustomerName?: string;
+  commission?: number;
+  // Contractor fields for contractor buying for customer scenario
+  contractorId?: string;
+  contractorName?: string;
+  items: QuotationItem[];
+  validUntil: string;
+  notes?: string;
+  termsConditions?: string;
+}
+
+export interface UpdateQuotationRequest extends CreateQuotationRequest {
+  id: string;
+}
+
+export interface QuotationFilter {
+  customerId?: string;
+  status?: 'pending' | 'confirmed' | 'converted' | 'cancelled';
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
+}
+
+// Invoice Request types
+export interface CreateInvoiceRequest {
+  customerId: string;
+  customerName: string;
+  customerPhone: string;
+  customerType: 'customer' | 'contractor';
+  endCustomerName?: string;
+  contractorId?: string;
+  contractorName?: string;
+  commission?: number;
+  subtotal: number;
+  totalDiscount: number;
+  totalGst: number;
+  grandTotal: number;
+  amountPaid: number;
+  balance: number;
+  paymentMethod: 'cash' | 'card' | 'upi' | 'credit';
+  status: 'paid' | 'pending' | 'cancelled';
+  billType?: 'rough' | 'final_bill';
+  notes?: string;
+  items: BillItem[];
+}
+
+export interface UpdateInvoiceRequest extends CreateInvoiceRequest {
+  id: string;
+}
+
+export interface InvoiceFilter {
+  customerId?: string;
+  status?: 'paid' | 'pending' | 'cancelled';
+  billType?: 'rough' | 'final_bill';
+  fromDate?: string;
+  toDate?: string;
+  search?: string;
+}
+
+// Product Audit types
+export type AuditAction = 'PRODUCT_CREATED' | 'STOCK_INCREASED' | 'STOCK_DECREASED' | 'PRICE_UPDATED' | 'STOCK_AND_PRICE_UPDATED';
+
+export interface ProductAudit {
+  id: string;
+  productId: string;
+  productName: string;
+  productCode: string;
+  action: AuditAction;
+  oldStock?: number;
+  newStock?: number;
+  stockChange?: number;
+  cashAmount?: number;
+  oldPrice?: number;
+  newPrice?: number;
+  priceChange?: number;
+  performedBy?: string;
+  performedByName?: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface UpdateStockRequest {
+  quantity: number;
+  operation: 'add' | 'subtract';
+  cashAmount?: number;
+  notes?: string;
+}
+
+export interface UpdatePriceRequest {
+  newPrice: number;
+  notes?: string;
 }

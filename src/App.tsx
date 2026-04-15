@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import Billing from "./pages/Billing";
+import Quotations from "./pages/Quotations";
 import Products from "./pages/Products";
 import Customers from "./pages/Customers";
 import CustomerLedger from "./pages/CustomerLedger";
@@ -39,6 +40,11 @@ const App = () => (
             <Route path="/billing" element={
               <ProtectedRoute requiredPermission="billing">
                 <Billing />
+              </ProtectedRoute>
+            } />
+            <Route path="/quotations" element={
+              <ProtectedRoute requiredPermission="billing">
+                <Quotations />
               </ProtectedRoute>
             } />
             <Route path="/products" element={

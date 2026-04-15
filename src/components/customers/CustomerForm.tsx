@@ -19,15 +19,17 @@ interface CustomerFormProps {
   defaultType?: 'customer' | 'contractor';
   onSave: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => void;
   onUpdate?: (id: string, updates: Partial<Customer>) => void;
+  contractors?: Customer[]; // List of contractors to link customer to
 }
 
-export function CustomerForm({ isOpen, onClose, customer, defaultType = 'customer', onSave, onUpdate }: CustomerFormProps) {
+export function CustomerForm({ isOpen, onClose, customer, defaultType = 'customer', onSave, onUpdate, contractors = [] }: CustomerFormProps) {
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
     email: '',
     address: '',
     type: defaultType as 'customer' | 'contractor',
+    contractorId: '',
   });
 
   useEffect(() => {
@@ -38,6 +40,7 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
         email: customer.email || '',
         address: customer.address || '',
         type: customer.type || 'customer',
+        contractorId: customer.contractorId || '',
       });
     } else {
       setFormData({
@@ -46,6 +49,7 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
         email: '',
         address: '',
         type: defaultType,
+        contractorId: '',
       });
     }
   }, [customer, defaultType]);
@@ -54,10 +58,15 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
     e.preventDefault();
     if (!formData.name) return;
 
+    const customerData = {
+      ...formData,
+      contractorId: formData.contractorId || undefined,
+    };
+
     if (customer && onUpdate) {
-      onUpdate(customer.id, formData);
+      onUpdate(customer.id, customerData);
     } else {
-      onSave(formData);
+      onSave(customerData);
     }
     onClose();
   };
@@ -78,7 +87,7 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
             <Label htmlFor="type">Type</Label>
             <Select
               value={formData.type}
-              onValueChange={(v) => setFormData({ ...formData, type: v as 'customer' | 'contractor' })}
+              onValueChange={(v) => setFormData({ ...formData, type: v as 'customer' | 'contractor', contractorId: '' })}
               disabled={!!customer}
             >
               <SelectTrigger>
@@ -90,6 +99,32 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
               </SelectContent>
             </Select>
           </div>
+
+          {/* Show contractor selection only for customers (not contractors) */}
+          {formData.type === 'customer' && contractors.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="contractorId">Link to Contractor (Optional)</Label>
+              <Select
+                value={formData.contractorId || '_none_'}
+                onValueChange={(v) => setFormData({ ...formData, contractorId: v === '_none_' ? '' : v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a contractor (optional)" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_none_">No Contractor</SelectItem>
+                  {contractors.map((contractor) => (
+                    <SelectItem key={contractor.id} value={contractor.id}>
+                      {contractor.name} ({contractor.phone})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Link this customer to a contractor for contractor-managed billing
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label htmlFor="name">{isContractor ? 'Contractor' : 'Customer'} Name *</Label>

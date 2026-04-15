@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Printer, Save, Trash2, CreditCard, Banknote, Smartphone, Clock, HardHat, User, FileText } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -13,9 +13,12 @@ import { PendingBillsDrawer } from '@/components/billing/PendingBillsDrawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProducts } from '@/hooks/useProducts';
 import { useCustomers } from '@/hooks/useCustomers';
+import { Users } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
+import { updateProductStock } from '@/lib/api';
 import { usePayments } from '@/hooks/usePayments';
 import { useSettings } from '@/hooks/useSettings';
 import { usePriceMapping } from '@/hooks/usePriceMapping';
@@ -29,7 +32,7 @@ import { useReactToPrint } from 'react-to-print';
 
 export default function Billing() {
   const { products, addProduct, updateStock } = useProducts();
-  const { customers, addCustomer } = useCustomers();
+  const { customers, addCustomer, getCustomersByContractorId } = useCustomers();
   const { addInvoice, getCustomerBalance } = useInvoices();
   const { addBillingTransaction } = usePayments();
   const { settings } = useSettings();
@@ -56,6 +59,9 @@ export default function Billing() {
   const [endCustomerName, setEndCustomerName] = useState('');
   const [commission, setCommission] = useState(0);
   const [billNotes, setBillNotes] = useState('');
+  // Linked customers for contractor billing
+  const [linkedCustomers, setLinkedCustomers] = useState<Customer[]>([]);
+  const [selectedLinkedCustomer, setSelectedLinkedCustomer] = useState<Customer | null>(null);
 
   const handleAddCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
     return addCustomer(customerData) as unknown as Customer;
@@ -67,6 +73,25 @@ export default function Billing() {
 
   const isContractor = selectedCustomer?.type === 'contractor';
 
+  // Fetch linked customers when contractor is selected
+  useEffect(() => {
+    if (isContractor && selectedCustomer) {
+      getCustomersByContractorId(selectedCustomer.id).then((customers) => {
+        setLinkedCustomers(customers);
+        // If no linked customers, reset selected linked customer
+        if (customers.length === 0) {
+          setSelectedLinkedCustomer(null);
+        }
+      });
+    } else {
+      setLinkedCustomers([]);
+      setSelectedLinkedCustomer(null);
+    }
+  }, [isContractor, selectedCustomer, getCustomersByContractorId]);
+
+  // Get all contractors for the dropdown
+  const contractors = customers.filter(c => c.type === 'contractor');
+
   const handlePrint = useReactToPrint({
     contentRef: printRef,
     documentTitle: invoiceForPrint?.invoiceNumber || 'Rough-Bill',
@@ -74,6 +99,9 @@ export default function Billing() {
 
   const handleSelectCustomer = async (customer: Customer) => {
     setSelectedCustomer(customer);
+    // Reset linked customer when customer changes
+    setSelectedLinkedCustomer(null);
+    setEndCustomerName('');
 
     // Update prices for existing items based on customer's last payment values
     const updatedItems = await Promise.all(
@@ -226,9 +254,9 @@ export default function Billing() {
     setBillItems((items) => items.filter((item) => item.id !== id));
   };
 
-  const clearBill = async () => {
-    // Save current bill as pending bill before clearing
-    if (billItems.length > 0 && selectedCustomer && selectedCustomer.id !== 'walk-in') {
+  const clearBill = async (savePending: boolean = false) => {
+    // Save current bill as pending bill before clearing (only when Clear Bill button is clicked)
+    if (savePending && billItems.length > 0 && selectedCustomer && selectedCustomer.id !== 'walk-in') {
       try {
         await savePendingBill(
           billItems,
@@ -256,6 +284,8 @@ export default function Billing() {
     setEndCustomerName('');
     setCommission(0);
     setActivePendingBillId(undefined);
+    setLinkedCustomers([]);
+    setSelectedLinkedCustomer(null);
   };
 
   const handleAddNewProduct = (name: string) => {
@@ -298,16 +328,33 @@ export default function Billing() {
     setActivePendingBillId(pending.id);
 
     const totals = calculateTotals();
+
+    // Use linked customer info if contractor is billing for a linked customer
+    const roughBillCustomerId = isContractor && selectedLinkedCustomer
+      ? selectedLinkedCustomer.id
+      : (selectedCustomer?.id || 'walk-in');
+    const roughBillCustomerName = isContractor && selectedLinkedCustomer
+      ? selectedLinkedCustomer.name
+      : (selectedCustomer?.name || 'Walk-in Customer');
+    const roughBillCustomerPhone = isContractor && selectedLinkedCustomer
+      ? selectedLinkedCustomer.phone
+      : (selectedCustomer?.phone || '');
+    const roughBillCustomerType = isContractor && selectedLinkedCustomer
+      ? 'customer'
+      : (selectedCustomer?.type || 'customer');
+
     // Create a temporary invoice object for printing (not saved to invoices)
     const roughInvoice: Invoice = {
       id: 'rough-' + generateId(),
       invoiceNumber: 'ROUGH',
-      customerId: selectedCustomer?.id || 'walk-in',
-      customerName: selectedCustomer?.name || 'Walk-in Customer',
-      customerPhone: selectedCustomer?.phone || '',
-      customerType: selectedCustomer?.type || 'customer',
+      customerId: roughBillCustomerId,
+      customerName: roughBillCustomerName,
+      customerPhone: roughBillCustomerPhone,
+      customerType: roughBillCustomerType,
       endCustomerName: isContractor ? endCustomerName.trim() : undefined,
       commission: isContractor && commission > 0 ? commission : undefined,
+      contractorId: isContractor ? selectedCustomer?.id : undefined,
+      contractorName: isContractor ? selectedCustomer?.name : undefined,
       items: billItems,
       ...totals,
       amountPaid: 0,
@@ -344,16 +391,38 @@ export default function Billing() {
     const finalAmountPaid = amountPaid > 0 ? amountPaid : totals.grandTotal;
     const balance = totals.grandTotal - finalAmountPaid;
 
+    // Check if selected customer (contractor) is purchasing for a linked customer
+    // or if the customer is linked to a contractor
+    const linkedContractor = selectedCustomer.contractorId ? customers.find(c => c.id === selectedCustomer.contractorId) : null;
+
+    // When contractor is billing: use linked customer as the customer, contractor as the contractor
+    // Otherwise: use selected customer as customer, linked contractor (if any) as contractor
+    const invoiceCustomerId = isContractor && selectedLinkedCustomer
+      ? selectedLinkedCustomer.id
+      : selectedCustomer.id;
+    const invoiceCustomerName = isContractor && selectedLinkedCustomer
+      ? selectedLinkedCustomer.name
+      : selectedCustomer.name;
+    const invoiceCustomerPhone = isContractor && selectedLinkedCustomer
+      ? selectedLinkedCustomer.phone
+      : selectedCustomer.phone;
+    const invoiceCustomerType = isContractor && selectedLinkedCustomer
+      ? 'customer'
+      : (selectedCustomer.type || 'customer');
+
     let invoice;
     try {
       invoice = await addInvoice(
         {
-          customerId: selectedCustomer.id,
-          customerName: selectedCustomer.name,
-          customerPhone: selectedCustomer.phone,
-          customerType: selectedCustomer.type || 'customer',
+          customerId: invoiceCustomerId,
+          customerName: invoiceCustomerName,
+          customerPhone: invoiceCustomerPhone,
+          customerType: invoiceCustomerType,
           endCustomerName: isContractor ? endCustomerName.trim() : undefined,
           commission: isContractor && commission > 0 ? commission : undefined,
+          // Include contractor fields if billing for a contractor or customer linked to contractor
+          contractorId: isContractor ? selectedCustomer.id : linkedContractor?.id,
+          contractorName: isContractor ? selectedCustomer.name : linkedContractor?.name,
           items: billItems,
           ...totals,
           amountPaid: finalAmountPaid,
@@ -436,9 +505,19 @@ export default function Billing() {
       );
     }
 
-    billItems.forEach((item) => {
-      updateStock(item.productId, item.quantity);
-    });
+    // Reduce product stock for each bill item using API
+    for (const item of billItems) {
+      try {
+        await updateProductStock(item.productId, {
+          quantity: item.quantity,
+          operation: 'subtract',
+          cashAmount: finalAmountPaid / billItems.length, // Distribute cash amount proportionally
+          notes: `Sold via invoice ${invoice.invoiceNumber}`,
+        });
+      } catch (error) {
+        console.error(`Failed to update stock for product ${item.productId}:`, error);
+      }
+    }
 
     // Remove from pending bills if it was loaded from there
     if (activePendingBillId) {
@@ -448,7 +527,7 @@ export default function Billing() {
     toast({ title: 'Invoice Saved', description: `Invoice ${invoice.invoiceNumber} has been created` });
     clearBill();
     return invoice;
-  }, [billItems, selectedCustomer, paymentMethod, calculateTotals, addInvoice, addBillingTransaction, settings.invoicePrefix, updateStock, toast, endCustomerName, commission, isContractor, updatePriceMappingsFromInvoice, addCommission, amountPaid, activePendingBillId, removePendingBill]);
+  }, [billItems, selectedCustomer, paymentMethod, calculateTotals, addInvoice, addBillingTransaction, settings.invoicePrefix, updateStock, toast, endCustomerName, commission, isContractor, updatePriceMappingsFromInvoice, addCommission, amountPaid, activePendingBillId, removePendingBill, selectedLinkedCustomer]);
 
   const handleSaveOnly = async () => { await handleSaveInvoice(); };
 
@@ -530,28 +609,82 @@ export default function Billing() {
               {isContractor ? <HardHat className="w-4 h-4 text-amber-500" /> : <User className="w-4 h-4" />}
               {isContractor ? 'Contractor' : 'Customer'}
             </h3>
+
             <CustomerSelect
               customers={customers}
               selectedCustomer={selectedCustomer}
               onSelectCustomer={handleSelectCustomer}
               onAddCustomer={handleAddCustomer}
+              contractors={contractors}
             />
 
             {isContractor && (
-              <div className="mt-3 space-y-2">
-                <Label htmlFor="endCustomer" className="text-sm font-medium">
-                  Purchasing for (End Customer Name) *
-                </Label>
-                <Input
-                  id="endCustomer"
-                  value={endCustomerName}
-                  onChange={(e) => setEndCustomerName(e.target.value)}
-                  placeholder="Enter end customer name (e.g., Raj, Rahul)"
-                  className="h-10"
-                />
-                <p className="text-xs text-muted-foreground">
-                  The customer this contractor is purchasing goods for
-                </p>
+              <div className="mt-3 space-y-3">
+                {/* Linked Customer Dropdown */}
+                <div className="space-y-2">
+                  <Label htmlFor="linkedCustomer" className="text-sm font-medium flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Select Linked Customer *
+                  </Label>
+                  {linkedCustomers.length > 0 ? (
+                    <Select
+                      value={selectedLinkedCustomer?.id || '_manual_'}
+                      onValueChange={(customerId) => {
+                        if (customerId === '_manual_') {
+                          setSelectedLinkedCustomer(null);
+                          setEndCustomerName('');
+                        } else {
+                          const customer = linkedCustomers.find(c => c.id === customerId);
+                          setSelectedLinkedCustomer(customer || null);
+                          setEndCustomerName(customer?.name || '');
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="h-10">
+                        <SelectValue placeholder="Select a linked customer" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="_manual_">-- Enter Manually --</SelectItem>
+                        {linkedCustomers.map((customer) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.name} ({customer.phone})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
+                      No linked customers found. Enter end customer name manually below.
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Choose a customer linked to this contractor, or enter manually
+                  </p>
+                </div>
+
+                {/* Manual End Customer Name Input */}
+                <div className="space-y-2">
+                  <Label htmlFor="endCustomer" className="text-sm font-medium">
+                    End Customer Name {selectedLinkedCustomer ? '(Auto-filled)' : '*'}
+                  </Label>
+                  <Input
+                    id="endCustomer"
+                    value={endCustomerName}
+                    onChange={(e) => {
+                      setEndCustomerName(e.target.value);
+                      // Clear linked customer selection if manually typing
+                      if (selectedLinkedCustomer && e.target.value !== selectedLinkedCustomer.name) {
+                        setSelectedLinkedCustomer(null);
+                      }
+                    }}
+                    placeholder="Enter end customer name (e.g., Raj, Rahul)"
+                    className="h-10"
+                    readOnly={!!selectedLinkedCustomer}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    The customer this contractor is purchasing goods for
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -659,10 +792,20 @@ export default function Billing() {
           <div className="bg-card border border-border rounded-xl p-4">
             <h3 className="font-medium mb-4">Bill Summary</h3>
             <div className="space-y-3">
-              {isContractor && endCustomerName && (
-                <div className="flex justify-between text-sm pb-2 border-b border-border">
-                  <span className="text-muted-foreground">End Customer</span>
-                  <span className="font-medium">{endCustomerName}</span>
+              {isContractor && (
+                <div className="space-y-2 pb-2 border-b border-border">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Contractor</span>
+                    <span className="font-medium text-amber-600">{selectedCustomer?.name}</span>
+                  </div>
+                  {endCustomerName && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">
+                        {selectedLinkedCustomer ? 'Linked Customer' : 'End Customer'}
+                      </span>
+                      <span className="font-medium">{endCustomerName}</span>
+                    </div>
+                  )}
                 </div>
               )}
               <div className="flex justify-between text-sm">
@@ -751,7 +894,7 @@ export default function Billing() {
               <FileText size={18} />
               Print Rough Bill
             </Button>
-            <Button onClick={clearBill} variant="ghost" className="w-full gap-2 text-destructive hover:text-destructive">
+            <Button onClick={() => clearBill(true)} variant="ghost" className="w-full gap-2 text-destructive hover:text-destructive">
               <Trash2 size={18} />
               Clear Bill
             </Button>

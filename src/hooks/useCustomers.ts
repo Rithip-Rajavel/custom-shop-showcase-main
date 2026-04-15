@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Customer } from '@/types';
-import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
+import { apiGet, apiPost, apiPut, apiDelete, getCustomersByContractor } from '@/lib/api';
 
 export function useCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -61,6 +61,11 @@ export function useCustomers() {
     return customers.filter((c) => c.type === type);
   };
 
+  const getCustomersByContractorId = useCallback(async (contractorId: string): Promise<Customer[]> => {
+    const data = await getCustomersByContractor(contractorId);
+    return data ?? [];
+  }, []);
+
   return {
     customers,
     isLoading,
@@ -72,5 +77,6 @@ export function useCustomers() {
     searchCustomers,
     getCustomerById,
     getCustomersByType,
+    getCustomersByContractorId,
   };
 }

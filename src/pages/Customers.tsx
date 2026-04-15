@@ -306,11 +306,12 @@ export default function Customers() {
       {/* Form Modal */}
       <CustomerForm
         isOpen={isFormOpen}
-        onClose={closeForm}
+        onClose={() => { setIsFormOpen(false); setEditingCustomer(null); }}
         customer={editingCustomer}
         defaultType={formDefaultType}
         onSave={handleAddCustomer}
         onUpdate={handleUpdateCustomer}
+        contractors={customers.filter(c => c.type === 'contractor')}
       />
 
       {/* Delete Confirmation */}

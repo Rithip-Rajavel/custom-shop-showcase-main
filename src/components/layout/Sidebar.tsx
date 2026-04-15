@@ -17,6 +17,7 @@ import {
   Calendar,
   UserPlus,
   Building,
+  FileText as QuotationIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, ROLE_PERMISSIONS } from '@/contexts/AuthContext';
@@ -25,6 +26,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, permission: 'dashboard' },
   { to: '/billing', label: 'Billing', icon: Receipt, permission: 'billing' },
+  { to: '/quotations', label: 'Quotations', icon: QuotationIcon, permission: 'billing' },
   { to: '/products', label: 'Products', icon: Package, permission: 'products' },
   { to: '/customers', label: 'Customers & Contractors', icon: Users, permission: 'customers' },
   { to: '/invoices', label: 'Invoices', icon: FileText, permission: 'invoices' },
