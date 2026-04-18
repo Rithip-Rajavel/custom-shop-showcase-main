@@ -237,3 +237,84 @@ export async function getProductAudits(productId: string) {
 export async function getProductAuditsByAction(productId: string, action: string) {
   return apiGet<any[]>(`/api/products/${productId}/audits/${action}`);
 }
+
+// Contractor API endpoints
+export async function getContractorPendingBills(contractorId: string) {
+  return apiGet<any>(`/api/contractors/${contractorId}/pending-bills`);
+}
+
+export async function getAllContractorsPendingBills() {
+  return apiGet<any>('/api/contractors/pending-bills');
+}
+
+// Commission API endpoints
+export async function getCommissionsByContractor(contractorId: string) {
+  return apiGet<any[]>(`/api/commissions/contractor/${contractorId}`);
+}
+
+export async function getTotalCommissionByContractor(contractorId: string) {
+  return apiGet<{ total: number }>(`/api/commissions/contractor/${contractorId}/total`);
+}
+
+// Invoice Returns API endpoints
+export async function getAllReturns() {
+  return apiGet<any[]>('/api/invoice-returns');
+}
+
+export async function getReturnsByInvoice(invoiceId: string) {
+  return apiGet<any[]>(`/api/invoice-returns/invoice/${invoiceId}`);
+}
+
+export async function getReturnById(returnId: string) {
+  return apiGet<any>(`/api/invoice-returns/${returnId}`);
+}
+
+export async function getReturnsByCustomer(customerId: string) {
+  return apiGet<any[]>(`/api/invoice-returns/customer/${customerId}`);
+}
+
+export async function createReturnRequest(returnData: any) {
+  return apiPost<any>('/api/invoice-returns', returnData);
+}
+
+export async function processReturn(returnId: string, refundMethod: string, processedBy: string) {
+  return apiPost<any>(`/api/invoice-returns/${returnId}/process?refundMethod=${refundMethod}&processedBy=${processedBy}`);
+}
+
+export async function refundReturn(returnId: string, refundMethod: string, processedBy: string) {
+  return apiPost<any>(`/api/invoice-returns/${returnId}/refund?refundMethod=${refundMethod}&processedBy=${processedBy}`);
+}
+
+export async function cancelReturn(returnId: string) {
+  return apiDelete<any>(`/api/invoice-returns/${returnId}`);
+}
+
+export async function getTotalReturnedAmountByCustomer(customerId: string) {
+  return apiGet<{ totalReturned: number }>(`/api/invoice-returns/customer/${customerId}/total-returned`);
+}
+
+// Invoice Audit API endpoints
+export async function getInvoiceAuditTrail(invoiceId: string) {
+  return apiGet<any>(`/api/invoice-audit/invoice/${invoiceId}`);
+}
+
+export async function getCustomerAuditLogs(customerId: string) {
+  return apiGet<any[]>(`/api/invoice-audit/customer/${customerId}`);
+}
+
+export async function getOverduePaymentLogs() {
+  return apiGet<any[]>('/api/invoice-audit/overdue-payments');
+}
+
+// Overdue Bills API endpoints
+export async function getOverdueBills() {
+  return apiGet<any[]>('/api/overdue-bills');
+}
+
+export async function getOverdueBillsByCustomer(customerId: string) {
+  return apiGet<any[]>(`/api/overdue-bills/customer/${customerId}`);
+}
+
+export async function getOverdueSummary() {
+  return apiGet<any>('/api/overdue-bills/summary');
+}

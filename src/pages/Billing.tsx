@@ -52,12 +52,14 @@ export default function Billing() {
   const [newProductName, setNewProductName] = useState('');
   const [billDiscount, setBillDiscount] = useState(0);
   const [amountPaid, setAmountPaid] = useState(0);
+  const [hasManuallyEditedAmount, setHasManuallyEditedAmount] = useState(false);
   const [invoiceForPrint, setInvoiceForPrint] = useState<Invoice | null>(null);
   const [isRoughDraft, setIsRoughDraft] = useState(false);
   const [activePendingBillId, setActivePendingBillId] = useState<string | undefined>();
   // Contractor-specific fields
   const [endCustomerName, setEndCustomerName] = useState('');
   const [commission, setCommission] = useState(0);
+  const [commissionPercentage, setCommissionPercentage] = useState(0);
   const [billNotes, setBillNotes] = useState('');
   // Linked customers for contractor billing
   const [linkedCustomers, setLinkedCustomers] = useState<Customer[]>([]);
@@ -281,8 +283,10 @@ export default function Billing() {
     setPaymentMethod('cash');
     setBillDiscount(0);
     setAmountPaid(0);
+    setHasManuallyEditedAmount(false);
     setEndCustomerName('');
     setCommission(0);
+    setCommissionPercentage(0);
     setActivePendingBillId(undefined);
     setLinkedCustomers([]);
     setSelectedLinkedCustomer(null);
@@ -548,8 +552,10 @@ export default function Billing() {
     setPaymentMethod(bill.paymentMethod);
     setBillDiscount(bill.billDiscount);
     setAmountPaid(bill.amountPaid);
+    setHasManuallyEditedAmount(bill.amountPaid > 0);
     setEndCustomerName(bill.endCustomerName);
     setCommission(bill.commission);
+    setCommissionPercentage(0);
     setBillNotes(bill.notes || '');
     setActivePendingBillId(bill.id);
     toast({ title: 'Bill Loaded', description: `Loaded pending bill for ${bill.customerName}. Update prices and print final bill.` });
@@ -767,22 +773,48 @@ export default function Billing() {
                 <HardHat className="w-4 h-4 text-amber-500" />
                 Commission
               </h3>
-              <div className="space-y-2">
-                <Label htmlFor="commission" className="text-sm text-muted-foreground">
-                  Commission Amount (₹)
-                </Label>
-                <Input
-                  id="commission"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={commission}
-                  onChange={(e) => setCommission(parseFloat(e.target.value) || 0)}
-                  className="h-9"
-                  placeholder="0"
-                />
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <Label htmlFor="commissionPercentage" className="text-sm text-muted-foreground">
+                      Percentage (%)
+                    </Label>
+                    <Input
+                      id="commissionPercentage"
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={commissionPercentage}
+                      onChange={(e) => {
+                        const percentage = parseFloat(e.target.value) || 0;
+                        setCommissionPercentage(percentage);
+                        const totals = calculateTotals();
+                        const commissionAmount = (totals.grandTotal * percentage) / 100;
+                        setCommission(commissionAmount);
+                      }}
+                      className="h-9"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="commission" className="text-sm text-muted-foreground">
+                      Amount (₹)
+                    </Label>
+                    <Input
+                      id="commission"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={commission}
+                      onChange={(e) => setCommission(parseFloat(e.target.value) || 0)}
+                      className="h-9"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
                 <p className="text-xs text-muted-foreground">
-                  Commission for {selectedCustomer?.name} on this bill
+                  Enter percentage to auto-calculate, or enter amount directly
                 </p>
               </div>
             </div>
@@ -860,12 +892,18 @@ export default function Billing() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={amountPaid || totals.grandTotal}
+                  value={amountPaid || (!hasManuallyEditedAmount ? totals.grandTotal : 0)}
                   onChange={(e) => {
                     const value = parseFloat(e.target.value) || 0;
                     if (value < 0) { setAmountPaid(0); return; }
-                    if (value > totals.grandTotal) { setAmountPaid(totals.grandTotal); return; }
                     setAmountPaid(value);
+                    setHasManuallyEditedAmount(true);
+                  }}
+                  onFocus={(e) => {
+                    // If not manually edited yet, pre-fill with grandTotal on focus
+                    if (!hasManuallyEditedAmount && amountPaid === 0) {
+                      setAmountPaid(totals.grandTotal);
+                    }
                   }}
                   className="h-9"
                   placeholder={totals.grandTotal.toString()}

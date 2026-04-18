@@ -38,12 +38,15 @@ export default function Customers() {
   const [formDefaultType, setFormDefaultType] = useState<'customer' | 'contractor'>('customer');
   const [customerBalances, setCustomerBalances] = useState<Record<string, any>>({});
   const [customerCommissions, setCustomerCommissions] = useState<Record<string, number>>({});
+  const [contractorLinkedCustomers, setContractorLinkedCustomers] = useState<Record<string, Customer[]>>({});
+  const [expandedContractors, setExpandedContractors] = useState<Set<string>>(new Set());
 
-  // Fetch all customer balances and commissions from API
+  // Fetch all customer balances, commissions, and linked customers from API
   useEffect(() => {
     const fetchAllData = async () => {
       const balances: Record<string, any> = {};
       const commissions: Record<string, number> = {};
+      const linkedCustomers: Record<string, Customer[]> = {};
 
       for (const customer of customers) {
         if (customer.id !== 'walk-in') {
@@ -67,12 +70,22 @@ export default function Customers() {
               console.error(`Failed to fetch commission for ${customer.name}:`, error);
               commissions[customer.id] = 0;
             }
+
+            // Fetch linked customers for contractors
+            try {
+              const linked = await apiGet<Customer[]>(`/api/customers/contractor/${customer.id}`);
+              linkedCustomers[customer.id] = Array.isArray(linked) ? linked : [];
+            } catch (error) {
+              console.error(`Failed to fetch linked customers for ${customer.name}:`, error);
+              linkedCustomers[customer.id] = [];
+            }
           }
         }
       }
 
       setCustomerBalances(balances);
       setCustomerCommissions(commissions);
+      setContractorLinkedCustomers(linkedCustomers);
     };
 
     fetchAllData();
@@ -127,6 +140,18 @@ export default function Customers() {
   const closeForm = () => {
     setIsFormOpen(false);
     setEditingCustomer(null);
+  };
+
+  const toggleContractorExpand = (contractorId: string) => {
+    setExpandedContractors(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(contractorId)) {
+        newSet.delete(contractorId);
+      } else {
+        newSet.add(contractorId);
+      }
+      return newSet;
+    });
   };
 
   const getCustomerStats = (customerId: string) => {
@@ -208,6 +233,12 @@ export default function Customers() {
                       <p className="font-semibold text-amber-600">{formatCurrency(totalCommission)}</p>
                     </div>
                   )}
+                  {type === 'contractor' && contractorLinkedCustomers[customer.id] && contractorLinkedCustomers[customer.id].length > 0 && (
+                    <div className="text-sm cursor-pointer" onClick={() => toggleContractorExpand(customer.id)}>
+                      <p className="text-muted-foreground">Linked Customers</p>
+                      <p className="font-semibold text-primary">{contractorLinkedCustomers[customer.id].length}</p>
+                    </div>
+                  )}
                   {stats.lastPurchase && (
                     <div className="text-sm">
                       <p className="text-muted-foreground">Last Purchase</p>
@@ -246,6 +277,30 @@ export default function Customers() {
                   </div>
                 </div>
               </div>
+              {/* Linked Customers Collapsible Section */}
+              {type === 'contractor' && expandedContractors.has(customer.id) && contractorLinkedCustomers[customer.id] && contractorLinkedCustomers[customer.id].length > 0 && (
+                <div className="mt-4 pt-4 border-t border-border bg-muted/30 rounded-lg p-3">
+                  <h4 className="text-sm font-medium mb-3 text-muted-foreground">Linked Customers</h4>
+                  <div className="space-y-2">
+                    {contractorLinkedCustomers[customer.id].map((linkedCustomer) => (
+                      <div key={linkedCustomer.id} className="flex items-center justify-between bg-card rounded-lg p-2 px-3">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-primary" />
+                          <div>
+                            <p className="text-sm font-medium">{linkedCustomer.name}</p>
+                            <p className="text-xs text-muted-foreground">{linkedCustomer.phone}</p>
+                          </div>
+                        </div>
+                        <Link to={`/customers/${linkedCustomer.id}`}>
+                          <Button variant="ghost" size="sm" className="h-7 text-xs">
+                            View Ledger
+                          </Button>
+                        </Link>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           );
         })}

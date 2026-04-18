@@ -18,6 +18,8 @@ import {
   UserPlus,
   Building,
   FileText as QuotationIcon,
+  HardHat,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, ROLE_PERMISSIONS } from '@/contexts/AuthContext';
@@ -29,6 +31,8 @@ const navItems = [
   { to: '/quotations', label: 'Quotations', icon: QuotationIcon, permission: 'billing' },
   { to: '/products', label: 'Products', icon: Package, permission: 'products' },
   { to: '/customers', label: 'Customers & Contractors', icon: Users, permission: 'customers' },
+  { to: '/contractor-billing', label: 'Contractor Billing', icon: HardHat, permission: 'customers' },
+  { to: '/returns', label: 'Returns', icon: RefreshCw, permission: 'invoices' },
   { to: '/invoices', label: 'Invoices', icon: FileText, permission: 'invoices' },
   { to: '/employees', label: 'Employees', icon: UserCheck, permission: 'employees' },
   { to: '/attendance', label: 'Mark Attendance', icon: Calendar, permission: 'attendance' },

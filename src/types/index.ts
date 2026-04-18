@@ -23,8 +23,12 @@ export interface Customer {
   phone: string;
   email?: string;
   address?: string;
+  city?: string;
   type: 'customer' | 'contractor';
   contractorId?: string; // For customers linked to a contractor
+  isActive?: boolean;
+  lastPaymentDate?: string;
+  lastInvoiceDate?: string;
   createdAt: string;
   updatedAt: string;
 }

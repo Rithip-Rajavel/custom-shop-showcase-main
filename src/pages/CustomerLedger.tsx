@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, FileText, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, Receipt, Clock, HardHat, Eye, DollarSign, Trash2 } from 'lucide-react';
+import { ArrowLeft, FileText, TrendingUp, TrendingDown, Wallet, Plus, CreditCard, Receipt, Clock, HardHat, Eye, DollarSign, Trash2, History, RefreshCw, ChevronRight } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,8 @@ import { useInvoices } from '@/hooks/useInvoices';
 import { usePayments } from '@/hooks/usePayments';
 import { useCommissions } from '@/hooks/useCommissions';
 import { useBonuses } from '@/hooks/useBonuses';
+import { useInvoiceAudit } from '@/hooks/useInvoiceAudit';
+import { useReturns } from '@/hooks/useReturns';
 import { AddPaymentModal } from '@/components/customers/AddPaymentModal';
 import { BonusModal, BonusData } from '@/components/customers/BonusModal';
 import { formatCurrency, formatDate, formatDateTime } from '@/lib/utils';
@@ -24,6 +26,8 @@ export default function CustomerLedger() {
   const { getCustomerTransactions, addPaymentTransaction } = usePayments();
   const { getContractorCommissions, getTotalCommission } = useCommissions();
   const { bonuses, createBonus, deleteBonus, getBonusesByCustomer, getTotalBonusByCustomerAndYear } = useBonuses();
+  const { getInvoiceAudit, getCustomerAudit } = useInvoiceAudit();
+  const { getReturnsForCustomer } = useReturns();
 
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [paymentForInvoiceId, setPaymentForInvoiceId] = useState<string | null>(null);
@@ -32,6 +36,9 @@ export default function CustomerLedger() {
   const [isBonusModalOpen, setIsBonusModalOpen] = useState(false);
   const [isAddingBonus, setIsAddingBonus] = useState(false);
   const [totalBonus, setTotalBonus] = useState<number>(0);
+  const [auditLogs, setAuditLogs] = useState<any>(null);
+  const [selectedInvoiceAudit, setSelectedInvoiceAudit] = useState<any>(null);
+  const [customerReturns, setCustomerReturns] = useState<any[]>([]);
 
   const customer = customers.find((c) => c.id === customerId);
   const isContractor = customer?.type === 'contractor';
@@ -39,7 +46,7 @@ export default function CustomerLedger() {
   const transactions = customerId ? getCustomerTransactions(customerId) : [];
   const commissions = customerId && isContractor ? getContractorCommissions(customerId) : [];
 
-  // Fetch customer balance and bonuses from API
+  // Fetch customer balance, bonuses, and returns from API
   useEffect(() => {
     if (customerId) {
       // Fetch balance
@@ -61,6 +68,16 @@ export default function CustomerLedger() {
       getTotalBonusByCustomerAndYear(customerId, new Date().getFullYear())
         .then(setTotalBonus)
         .catch(console.error);
+
+      // Fetch returns
+      getReturnsForCustomer(customerId)
+        .then((returns) => {
+          setCustomerReturns(returns);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch returns:', error);
+          setCustomerReturns([]);
+        });
     }
   }, [customerId]);
 
@@ -129,6 +146,25 @@ export default function CustomerLedger() {
         });
     }
   }, [customerId, isContractor]);
+
+  const fetchCustomerAuditLogs = async () => {
+    if (!customerId) return;
+    try {
+      const logs = await getCustomerAudit(customerId);
+      setAuditLogs(logs);
+    } catch (error) {
+      console.error('Failed to fetch audit logs:', error);
+    }
+  };
+
+  const fetchInvoiceAudit = async (invoiceId: string) => {
+    try {
+      const audit = await getInvoiceAudit(invoiceId);
+      setSelectedInvoiceAudit(audit);
+    } catch (error) {
+      console.error('Failed to fetch invoice audit:', error);
+    }
+  };
 
   // Use API data if available, otherwise fallback to localStorage
   const displayBalance = customerBalance?.pendingBalance ?? 0;
@@ -328,6 +364,14 @@ export default function CustomerLedger() {
           <TabsTrigger value="transactions" className="gap-2">
             <Clock size={16} />
             Payment History
+          </TabsTrigger>
+          <TabsTrigger value="returns" className="gap-2">
+            <RefreshCw size={16} />
+            Returns
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="gap-2" onClick={fetchCustomerAuditLogs}>
+            <History size={16} />
+            Audit Trail
           </TabsTrigger>
           {isContractor && (
             <TabsTrigger value="commissions" className="gap-2">
@@ -544,6 +588,170 @@ export default function CustomerLedger() {
             </div>
           </TabsContent>
         )}
+
+        {/* Returns Tab */}
+        <TabsContent value="returns">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <h3 className="font-semibold flex items-center gap-2">
+                <RefreshCw className="w-4 h-4 text-primary" />
+                Return History
+              </h3>
+            </div>
+
+            {customerReturns.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted/50">
+                    <tr>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Return #</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Invoice #</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Date</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Items</th>
+                      <th className="text-right p-3 text-sm font-medium text-muted-foreground">Return Amount</th>
+                      <th className="text-center p-3 text-sm font-medium text-muted-foreground">Status</th>
+                      <th className="text-left p-3 text-sm font-medium text-muted-foreground">Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerReturns.map((ret) => (
+                      <tr key={ret.id} className="border-t border-border hover:bg-muted/30">
+                        <td className="p-3 text-sm font-mono">{ret.returnNumber}</td>
+                        <td className="p-3 text-sm font-mono">{ret.invoiceNumber}</td>
+                        <td className="p-3 text-sm">{formatDate(ret.createdAt)}</td>
+                        <td className="p-3 text-sm">{ret.totalReturnQuantity} items</td>
+                        <td className="p-3 text-sm text-right font-medium text-destructive">
+                          {formatCurrency(ret.totalReturnAmount)}
+                        </td>
+                        <td className="p-3 text-center">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${ret.status === 'refunded' ? 'bg-green-500/10 text-green-600' :
+                              ret.status === 'processed' ? 'bg-blue-500/10 text-blue-600' :
+                                ret.status === 'pending' ? 'bg-amber-500/10 text-amber-600' :
+                                  'bg-destructive/10 text-destructive'
+                            }`}>
+                            {ret.status.charAt(0).toUpperCase() + ret.status.slice(1)}
+                          </span>
+                        </td>
+                        <td className="p-3 text-sm text-muted-foreground">{ret.reason || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                <RefreshCw className="w-12 h-12 mb-4" />
+                <p className="text-lg">No returns found</p>
+                <p className="text-sm">Returns will appear here when items are returned from invoices</p>
+              </div>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Audit Trail Tab */}
+        <TabsContent value="audit">
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <div className="p-4 border-b border-border">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold flex items-center gap-2">
+                  <History className="w-4 h-4 text-primary" />
+                  Invoice Audit Trail
+                </h3>
+                <Button size="sm" variant="outline" className="gap-2" onClick={fetchCustomerAuditLogs}>
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+
+            {selectedInvoiceAudit ? (
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-muted/30 rounded-lg p-4">
+                  <div>
+                    <p className="text-xs text-muted-foreground">Invoice Number</p>
+                    <p className="font-semibold">{selectedInvoiceAudit.invoiceNumber}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Original Total</p>
+                    <p className="font-semibold">{formatCurrency(selectedInvoiceAudit.originalGrandTotal)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Current Balance</p>
+                    <p className={`font-semibold ${selectedInvoiceAudit.currentBalance > 0 ? 'text-destructive' : 'text-green-600'}`}>
+                      {formatCurrency(selectedInvoiceAudit.currentBalance)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Total Paid</p>
+                    <p className="font-semibold text-green-600">{formatCurrency(selectedInvoiceAudit.totalPaid)}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <h4 className="text-sm font-medium mb-3 text-muted-foreground">Payment History</h4>
+                  {selectedInvoiceAudit.paymentHistory && selectedInvoiceAudit.paymentHistory.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedInvoiceAudit.paymentHistory.map((payment: any, idx: number) => (
+                        <div key={idx} className="flex items-center justify-between bg-card rounded-lg p-3 border border-border">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center">
+                              <DollarSign className="w-4 h-4 text-green-600" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{formatCurrency(payment.amount)}</p>
+                              <p className="text-xs text-muted-foreground">{payment.paymentMethod} - {payment.notes || 'No notes'}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-sm font-medium">{formatDate(payment.timestamp)}</p>
+                            <p className="text-xs text-muted-foreground">{formatDateTime(payment.timestamp).split(',')[1]}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-muted-foreground text-sm">No payment history recorded</div>
+                  )}
+                </div>
+
+                <Button variant="outline" onClick={() => setSelectedInvoiceAudit(null)} className="w-full">
+                  Back to All Audit Logs
+                </Button>
+              </div>
+            ) : (
+              <div className="p-4">
+                {auditLogs && auditLogs.length > 0 ? (
+                  <div className="space-y-2">
+                    {auditLogs.map((audit: any) => (
+                      <div key={audit.id || audit.invoiceId} className="bg-card rounded-lg p-3 border border-border hover:bg-muted/30 cursor-pointer" onClick={() => fetchInvoiceAudit(audit.invoiceId)}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                              <Receipt className="w-4 h-4 text-primary" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium">{audit.invoiceNumber}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {audit.totalTransactions || 0} transactions • Total: {formatCurrency(audit.totalPaid || 0)}
+                              </p>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+                    <History className="w-12 h-12 mb-4" />
+                    <p className="text-lg">No audit logs found</p>
+                    <p className="text-sm">Audit logs will appear here when invoices are created or payments are made</p>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </TabsContent>
 
         {/* Bonus Tab (All Customers) */}
         <TabsContent value="bonus">

@@ -33,6 +33,8 @@ export default function Invoices() {
   const [customerFilter, setCustomerFilter] = useState<string>(
     searchParams.get('customer') || 'all'
   );
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const [printingInvoice, setPrintingInvoice] = useState<Invoice | null>(null);
   const [apiSettings, setApiSettings] = useState<ShopSettings | null>(null);
@@ -69,18 +71,30 @@ export default function Invoices() {
       const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
       const matchesCustomer = customerFilter === 'all' || inv.customerId === customerFilter;
 
-      return matchesSearch && matchesStatus && matchesCustomer;
+      const matchesDate = (() => {
+        if (!dateFrom && !dateTo) return true;
+        const invoiceDate = new Date(inv.createdAt).setHours(0, 0, 0, 0);
+        const fromDate = dateFrom ? new Date(dateFrom).setHours(0, 0, 0, 0) : null;
+        const toDate = dateTo ? new Date(dateTo).setHours(23, 59, 59, 999) : null;
+        if (fromDate && invoiceDate < fromDate) return false;
+        if (toDate && invoiceDate > toDate) return false;
+        return true;
+      })();
+
+      return matchesSearch && matchesStatus && matchesCustomer && matchesDate;
     });
-  }, [invoices, searchQuery, statusFilter, customerFilter]);
+  }, [invoices, searchQuery, statusFilter, customerFilter, dateFrom, dateTo]);
 
   const clearFilters = () => {
     setSearchQuery('');
     setStatusFilter('all');
     setCustomerFilter('all');
+    setDateFrom('');
+    setDateTo('');
     setSearchParams({});
   };
 
-  const hasActiveFilters = searchQuery || statusFilter !== 'all' || customerFilter !== 'all';
+  const hasActiveFilters = searchQuery || statusFilter !== 'all' || customerFilter !== 'all' || dateFrom || dateTo;
 
   const handlePrintInvoice = (invoice: Invoice) => {
     setPrintingInvoice(invoice);
@@ -121,6 +135,20 @@ export default function Invoices() {
           </div>
 
           <div className="flex gap-2">
+            <Input
+              type="date"
+              placeholder="From"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              className="w-36"
+            />
+            <Input
+              type="date"
+              placeholder="To"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              className="w-36"
+            />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-32">
                 <SelectValue placeholder="Status" />
@@ -179,14 +207,17 @@ export default function Invoices() {
                       {invoice.endCustomerName && (
                         <span className="text-amber-600"> → {invoice.endCustomerName}</span>
                       )}
-                      {' • '}{formatDateTime(invoice.createdAt)}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {invoice.items.length} items • {invoice.paymentMethod.toUpperCase()}
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <span>{formatDateTime(invoice.createdAt)}</span>
+                      <span>•</span>
+                      <span>{invoice.items.length} items</span>
+                      <span>•</span>
+                      <span>{invoice.paymentMethod.toUpperCase()}</span>
                       {invoice.customerType === 'contractor' && (
-                        <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-medium">Contractor</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 font-medium">Contractor</span>
                       )}
-                    </p>
+                    </div>
                   </div>
                 </div>
 

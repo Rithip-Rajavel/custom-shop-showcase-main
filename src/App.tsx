@@ -12,6 +12,8 @@ import Quotations from "./pages/Quotations";
 import Products from "./pages/Products";
 import Customers from "./pages/Customers";
 import CustomerLedger from "./pages/CustomerLedger";
+import ContractorBilling from "./pages/ContractorBilling";
+import Returns from "./pages/Returns";
 import Invoices from "./pages/Invoices";
 import Employees from "./pages/Employees";
 import Attendance from "./pages/Attendance";
@@ -60,6 +62,16 @@ const App = () => (
             <Route path="/customers/:customerId" element={
               <ProtectedRoute requiredPermission="customers">
                 <CustomerLedger />
+              </ProtectedRoute>
+            } />
+            <Route path="/contractor-billing" element={
+              <ProtectedRoute requiredPermission="customers">
+                <ContractorBilling />
+              </ProtectedRoute>
+            } />
+            <Route path="/returns" element={
+              <ProtectedRoute requiredPermission="invoices">
+                <Returns />
               </ProtectedRoute>
             } />
             <Route path="/invoices" element={
