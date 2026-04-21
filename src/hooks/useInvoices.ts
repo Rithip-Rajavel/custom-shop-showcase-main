@@ -59,10 +59,18 @@ export function useInvoices() {
     return newInvoice;
   };
 
-  const applyPaymentToInvoices = async (invoiceId: string, amount: number, paymentMethod: string): Promise<Invoice> => {
+  const applyPaymentToInvoices = async (
+    invoiceId: string,
+    amount: number,
+    paymentMethod: string,
+    notes?: string,
+    nextPayDate?: string
+  ): Promise<Invoice> => {
     const updated = await apiPost<Invoice>(`/api/invoices/${invoiceId}/pay`, {
       amount,
       paymentMethod,
+      notes,
+      nextPayDate,
     });
     setInvoices((prev) => prev.map((inv) => (inv.id === invoiceId ? updated : inv)));
     return updated;

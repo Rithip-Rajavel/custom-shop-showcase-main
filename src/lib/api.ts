@@ -209,8 +209,8 @@ export async function getNextInvoiceNumber(prefix: string = 'INV') {
   return apiGet<string>('/api/invoices/next-number', { prefix });
 }
 
-export async function applyPaymentToInvoice(invoiceId: string, amount: number, paymentMethod: string) {
-  return apiPost<any>(`/api/invoices/${invoiceId}/pay`, { amount, paymentMethod });
+export async function applyPaymentToInvoice(invoiceId: string, amount: number, paymentMethod: string, notes?: string, nextPayDate?: string) {
+  return apiPost<any>(`/api/invoices/${invoiceId}/pay`, { amount, paymentMethod, notes, nextPayDate });
 }
 
 export async function getInvoiceStats(period: string = 'month') {
@@ -317,4 +317,8 @@ export async function getOverdueBillsByCustomer(customerId: string) {
 
 export async function getOverdueSummary() {
   return apiGet<any>('/api/overdue-bills/summary');
+}
+
+export async function getPendingInvoicesByDate(date: string) {
+  return apiGet<any[]>('/api/invoices/pending-due-by-date', { date });
 }

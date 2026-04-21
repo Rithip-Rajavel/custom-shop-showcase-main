@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { Plus, Search, Edit2, Trash2, Package, ChevronDown, ChevronUp, History, DollarSign, Box } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Package, ChevronDown, ChevronUp, History, Box } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { ProductForm } from '@/components/products/ProductForm';
 import { ExcelImport } from '@/components/products/ExcelImport';
-import { StockUpdateModal } from '@/components/products/StockUpdateModal';
-import { PriceUpdateModal } from '@/components/products/PriceUpdateModal';
+import { ProductUpdateModal } from '@/components/products/ProductUpdateModal';
 import { AuditHistoryModal } from '@/components/products/AuditHistoryModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,8 +31,7 @@ export default function Products() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
-  const [stockUpdateProduct, setStockUpdateProduct] = useState<Product | null>(null);
-  const [priceUpdateProduct, setPriceUpdateProduct] = useState<Product | null>(null);
+  const [selectedProductForUpdate, setSelectedProductForUpdate] = useState<Product | null>(null);
   const [auditProduct, setAuditProduct] = useState<Product | null>(null);
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
@@ -234,20 +232,11 @@ export default function Products() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setStockUpdateProduct(product)}
+                                  onClick={() => setSelectedProductForUpdate(product)}
                                   className="h-8 w-8 p-0"
-                                  title="Update Stock"
+                                  title="Update Stock & Price"
                                 >
                                   <Box size={16} />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => setPriceUpdateProduct(product)}
-                                  className="h-8 w-8 p-0"
-                                  title="Update Price"
-                                >
-                                  <DollarSign size={16} />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -307,20 +296,13 @@ export default function Products() {
         onUpdate={handleUpdateProduct}
       />
 
-      {/* Stock Update Modal */}
-      <StockUpdateModal
-        isOpen={!!stockUpdateProduct}
-        onClose={() => setStockUpdateProduct(null)}
-        product={stockUpdateProduct}
-        onUpdate={handleUpdateStock}
-      />
-
-      {/* Price Update Modal */}
-      <PriceUpdateModal
-        isOpen={!!priceUpdateProduct}
-        onClose={() => setPriceUpdateProduct(null)}
-        product={priceUpdateProduct}
-        onUpdate={handleUpdatePrice}
+      {/* Product Update Modal (Stock & Price) */}
+      <ProductUpdateModal
+        isOpen={!!selectedProductForUpdate}
+        onClose={() => setSelectedProductForUpdate(null)}
+        product={selectedProductForUpdate}
+        onUpdateStock={handleUpdateStock}
+        onUpdatePrice={handleUpdatePrice}
       />
 
       {/* Audit History Modal */}

@@ -205,7 +205,7 @@ export default function CustomerLedger() {
     } else {
       // General customer payment - use applyPaymentToInvoices with a dummy invoiceId
       try {
-        await applyPaymentToInvoices(customer.id, amount, paymentMethod);
+        await applyPaymentToInvoices(customer.id, amount, paymentMethod, notes, nextPayDate);
 
         // Refresh customer balance after payment
         const updatedBalance = await apiGet(`/api/customers/${customerId}/balance`);

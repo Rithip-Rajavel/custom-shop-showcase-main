@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Package, Users, FileText, TrendingUp, ArrowUpRight, IndianRupee, Clock } from 'lucide-react';
+import { Package, Users, FileText, TrendingUp, ArrowUpRight, IndianRupee, Clock, Calendar, AlertCircle, Phone } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { useProducts } from '@/hooks/useProducts';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useInvoices, InvoiceStats } from '@/hooks/useInvoices';
-import { formatCurrency } from '@/lib/utils';
+import { formatCurrency, formatDate } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { getPendingInvoicesByDate } from '@/lib/api';
+import { Invoice } from '@/types';
 
 export default function Dashboard() {
   const { products } = useProducts();
@@ -22,9 +25,30 @@ export default function Dashboard() {
     pendingAmount: 0,
   });
 
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [pendingInvoices, setPendingInvoices] = useState<Invoice[]>([]);
+  const [loadingPending, setLoadingPending] = useState(false);
+
   useEffect(() => {
-    getInvoiceStats('month').then(setStats).catch(() => {});
+    getInvoiceStats('month').then(setStats).catch(() => { });
   }, [invoices]);
+
+  useEffect(() => {
+    fetchPendingInvoicesByDate(selectedDate);
+  }, [selectedDate]);
+
+  const fetchPendingInvoicesByDate = async (date: string) => {
+    setLoadingPending(true);
+    try {
+      const data = await getPendingInvoicesByDate(date);
+      setPendingInvoices(data || []);
+    } catch (error) {
+      console.error('Failed to fetch pending invoices:', error);
+      setPendingInvoices([]);
+    } finally {
+      setLoadingPending(false);
+    }
+  };
 
   const lowStockProducts = products.filter((p) => p.stock <= 5);
   const recentInvoices = invoices.slice(0, 5);
@@ -95,6 +119,70 @@ export default function Dashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Pending Bills by Date */}
+      <div className="bg-card border border-border rounded-xl p-6 mb-6">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-semibold">Pending Bills Due By Date</h2>
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-auto h-8"
+              />
+            </div>
+          </div>
+          <Link
+            to={`/invoices?date=${selectedDate}&status=pending`}
+            className="text-sm text-primary hover:underline flex items-center gap-1"
+          >
+            View all <ArrowUpRight size={14} />
+          </Link>
+        </div>
+
+        {loadingPending ? (
+          <div className="flex items-center justify-center py-8 text-muted-foreground">
+            <Clock className="w-6 h-6 animate-spin mr-2" />
+            Loading...
+          </div>
+        ) : pendingInvoices.length > 0 ? (
+          <div className="space-y-3">
+            {pendingInvoices.map((invoice) => (
+              <Link
+                key={invoice.id}
+                to={`/billing?editInvoiceId=${invoice.id}`}
+                className="flex items-center justify-between p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg hover:bg-amber-500/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                    <AlertCircle className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm">{invoice.customerName}</p>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Phone className="w-3 h-3" />
+                      <span>{invoice.customerPhone || 'No phone'}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground font-mono">{invoice.invoiceNumber}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-sm text-destructive">{formatCurrency(invoice.balance || 0)}</p>
+                  <p className="text-xs text-muted-foreground">To Pay</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
+            <Calendar className="w-10 h-10 mb-2" />
+            <p>No pending bills for {formatDate(selectedDate)}</p>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
