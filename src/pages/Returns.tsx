@@ -207,16 +207,10 @@ export default function Returns() {
         title="Invoice Returns"
         description="Manage product returns and refunds"
         action={
-          <div className="flex gap-2">
-            <Button onClick={fetchAllReturns} variant="outline" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </Button>
-            <Button onClick={openCreateModal} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Create Return
-            </Button>
-          </div>
+          <Button onClick={fetchAllReturns} variant="outline" className="gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Refresh
+          </Button>
         }
       />
 
@@ -329,7 +323,7 @@ export default function Returns() {
                         <Button
                           variant="default"
                           size="sm"
-                          onClick={() => setSelectedReturn({ ...ret, action: 'process' })}
+                          onClick={() => setSelectedReturn(ret)}
                           className="gap-1"
                         >
                           <CheckCircle className="w-4 h-4" />
@@ -433,135 +427,6 @@ export default function Returns() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Create Return Dialog */}
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Return Request</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {/* Invoice Selection */}
-            <div className="space-y-2">
-              <Label htmlFor="invoiceSelect">Select Invoice</Label>
-              <Select onValueChange={handleSelectInvoice} value={selectedInvoice?.id}>
-                <SelectTrigger id="invoiceSelect">
-                  <SelectValue placeholder="Select an invoice to return items from" />
-                </SelectTrigger>
-                <SelectContent>
-                  {invoices.map((invoice) => (
-                    <SelectItem key={invoice.id} value={invoice.id}>
-                      {invoice.invoiceNumber} - {invoice.customerName} - {formatCurrency(invoice.grandTotal)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Return Reason */}
-            <div className="space-y-2">
-              <Label htmlFor="returnReason">Return Reason</Label>
-              <Input
-                id="returnReason"
-                placeholder="e.g., Wrong item delivered, Damaged goods, etc."
-                value={returnReason}
-                onChange={(e) => setReturnReason(e.target.value)}
-              />
-            </div>
-
-            {/* Items to Return */}
-            {selectedInvoice && (
-              <div className="space-y-4">
-                <Label>Items to Return</Label>
-                <div className="space-y-3">
-                  {selectedInvoice.items.map((item: any) => (
-                    <div key={item.id} className="border border-border rounded-lg p-3">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <p className="font-medium">{item.productName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Original Qty: {item.quantity} • Price: {formatCurrency(item.price)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
-                          <Label htmlFor={`qty-${item.id}`}>Return Quantity</Label>
-                          <div className="flex items-center gap-2">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateReturnItem(item.id, 'returnQuantity', Math.max(0, (returnItems.find(ri => ri.id === item.id)?.returnQuantity || 0) - 1))}
-                            >
-                              <Minus className="w-4 h-4" />
-                            </Button>
-                            <Input
-                              id={`qty-${item.id}`}
-                              type="number"
-                              min="0"
-                              max={item.quantity}
-                              value={returnItems.find(ri => ri.id === item.id)?.returnQuantity || 0}
-                              onChange={(e) => updateReturnItem(item.id, 'returnQuantity', Math.min(item.quantity, Math.max(0, parseFloat(e.target.value) || 0)))}
-                              className="w-20 text-center"
-                            />
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateReturnItem(item.id, 'returnQuantity', Math.min(item.quantity, (returnItems.find(ri => ri.id === item.id)?.returnQuantity || 0) + 1))}
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor={`reason-${item.id}`}>Item Reason</Label>
-                          <Input
-                            id={`reason-${item.id}`}
-                            placeholder="e.g., Wrong size, Damaged"
-                            value={returnItems.find(ri => ri.id === item.id)?.returnReason || ''}
-                            onChange={(e) => updateReturnItem(item.id, 'returnReason', e.target.value)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Summary */}
-            {selectedInvoice && returnItems.some(item => item.returnQuantity > 0) && (
-              <div className="bg-muted/30 rounded-lg p-4">
-                <h4 className="font-medium mb-2">Return Summary</h4>
-                <div className="space-y-1 text-sm">
-                  {returnItems.filter(item => item.returnQuantity > 0).map((item) => (
-                    <div key={item.id} className="flex justify-between">
-                      <span>{item.productName} x {item.returnQuantity}</span>
-                      <span>{formatCurrency(item.returnQuantity * item.price)}</span>
-                    </div>
-                  ))}
-                  <div className="border-t border-border pt-2 mt-2 flex justify-between font-medium">
-                    <span>Total Return Amount</span>
-                    <span>{formatCurrency(returnItems.reduce((sum, item) => sum + (item.returnQuantity * item.price), 0))}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleCreateReturn} disabled={isCreating || !selectedInvoice || !returnItems.some(item => item.returnQuantity > 0)}>
-              {isCreating ? 'Creating...' : 'Create Return Request'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </MainLayout>
   );
 }

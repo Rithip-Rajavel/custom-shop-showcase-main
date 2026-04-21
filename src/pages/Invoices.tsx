@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, FileText, Printer, Eye, Filter, X } from 'lucide-react';
+import { Search, FileText, Printer, Eye, Filter, X, RotateCcw, Edit } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { InvoiceReceipt } from '@/components/billing/InvoiceReceipt';
@@ -12,14 +12,26 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
+  DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { useInvoices } from '@/hooks/useInvoices';
 import { useCustomers } from '@/hooks/useCustomers';
 import { useSettings } from '@/hooks/useSettings';
 import { Invoice, ShopSettings } from '@/types';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { useReactToPrint } from 'react-to-print';
-import { apiGet } from '@/lib/api';
+import { apiGet, returnInvoice } from '@/lib/api';
 
 export default function Invoices() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -38,6 +50,7 @@ export default function Invoices() {
   const [viewingInvoice, setViewingInvoice] = useState<Invoice | null>(null);
   const [printingInvoice, setPrintingInvoice] = useState<Invoice | null>(null);
   const [apiSettings, setApiSettings] = useState<ShopSettings | null>(null);
+  const [showReturnConfirmation, setShowReturnConfirmation] = useState(false);
 
   // Fetch settings from API
   useEffect(() => {
@@ -66,7 +79,8 @@ export default function Invoices() {
         !searchQuery ||
         inv.invoiceNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         inv.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        inv.customerPhone.includes(searchQuery);
+        inv.customerPhone.includes(searchQuery) ||
+        (inv.contractorName && inv.contractorName.toLowerCase().includes(searchQuery.toLowerCase()));
 
       const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
       const matchesCustomer = customerFilter === 'all' || inv.customerId === customerFilter;
@@ -101,6 +115,19 @@ export default function Invoices() {
     setTimeout(() => {
       handlePrint();
     }, 100);
+  };
+
+  const handleReturn = async () => {
+    if (!viewingInvoice) return;
+    try {
+      await returnInvoice(viewingInvoice.id);
+      setShowReturnConfirmation(false);
+      setViewingInvoice(null);
+      // Refresh invoices to show updated status
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to return invoice:', error);
+    }
   };
 
   const getStatusBadge = (status: Invoice['status']) => {
@@ -280,6 +307,27 @@ export default function Invoices() {
               Close
             </Button>
             <Button
+              variant="outline"
+              onClick={() => setShowReturnConfirmation(true)}
+              className="flex-1 gap-2"
+            >
+              <RotateCcw size={18} />
+              Return
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (viewingInvoice) {
+                  // Navigate to billing page with invoice ID
+                  window.location.href = `/billing?editInvoiceId=${viewingInvoice.id}`;
+                }
+              }}
+              className="flex-1 gap-2"
+            >
+              <Edit size={18} />
+              Edit
+            </Button>
+            <Button
               onClick={() => {
                 if (viewingInvoice) {
                   handlePrintInvoice(viewingInvoice);
@@ -294,6 +342,22 @@ export default function Invoices() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Return Confirmation Dialog */}
+      <AlertDialog open={showReturnConfirmation} onOpenChange={setShowReturnConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Return</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to mark invoice {viewingInvoice?.invoiceNumber} as returned? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleReturn}>Yes, Return Invoice</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Hidden Print Receipt */}
       {printingInvoice && (

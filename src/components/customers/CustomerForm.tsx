@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Customer } from '@/types';
+import { Search } from 'lucide-react';
 
 interface CustomerFormProps {
   isOpen: boolean;
@@ -28,9 +29,22 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
     phone: '',
     email: '',
     address: '',
+    city: '',
     type: defaultType as 'customer' | 'contractor',
     contractorId: '',
   });
+  const [contractorSearchQuery, setContractorSearchQuery] = useState('');
+
+  // Filter contractors by name, phone, or city
+  const filteredContractors = useMemo(() => {
+    if (!contractorSearchQuery) return contractors;
+    const query = contractorSearchQuery.toLowerCase();
+    return contractors.filter((contractor) =>
+      contractor.name.toLowerCase().includes(query) ||
+      contractor.phone.includes(query) ||
+      (contractor.city && contractor.city.toLowerCase().includes(query))
+    );
+  }, [contractors, contractorSearchQuery]);
 
   useEffect(() => {
     if (customer) {
@@ -39,6 +53,7 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
         phone: customer.phone,
         email: customer.email || '',
         address: customer.address || '',
+        city: customer.city || '',
         type: customer.type || 'customer',
         contractorId: customer.contractorId || '',
       });
@@ -48,6 +63,7 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
         phone: '',
         email: '',
         address: '',
+        city: '',
         type: defaultType,
         contractorId: '',
       });
@@ -104,6 +120,16 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
           {formData.type === 'customer' && contractors.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="contractorId">Link to Contractor (Optional)</Label>
+              {/* Search input for contractors */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search by name, phone, or city..."
+                  value={contractorSearchQuery}
+                  onChange={(e) => setContractorSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
               <Select
                 value={formData.contractorId || '_none_'}
                 onValueChange={(v) => setFormData({ ...formData, contractorId: v === '_none_' ? '' : v })}
@@ -113,11 +139,22 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="_none_">No Contractor</SelectItem>
-                  {contractors.map((contractor) => (
-                    <SelectItem key={contractor.id} value={contractor.id}>
-                      {contractor.name} ({contractor.phone})
-                    </SelectItem>
-                  ))}
+                  {filteredContractors.length > 0 ? (
+                    filteredContractors.map((contractor) => (
+                      <SelectItem key={contractor.id} value={contractor.id}>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{contractor.name}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {contractor.phone} {contractor.city ? `• ${contractor.city}` : ''}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      No contractors found
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
@@ -165,6 +202,16 @@ export function CustomerForm({ isOpen, onClose, customer, defaultType = 'custome
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               placeholder="Address"
               rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="city">City</Label>
+            <Input
+              id="city"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              placeholder="City"
             />
           </div>
 

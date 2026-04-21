@@ -38,6 +38,7 @@ export interface CustomerRequest {
   phone: string;
   email?: string;
   address?: string;
+  city?: string;
   type: 'customer' | 'contractor';
   contractorId?: string; // For customers linked to a contractor
 }
@@ -95,6 +96,7 @@ export interface Invoice {
   status: 'paid' | 'pending' | 'cancelled';
   billType?: 'rough' | 'final_bill';
   notes?: string;
+  nextPayDate?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -138,6 +140,7 @@ export interface PaymentTransaction {
   balanceAfter: number;
   paymentMethod: PaymentMethod;
   notes?: string;
+  nextPayDate?: string;
   createdAt: string;
 }
 

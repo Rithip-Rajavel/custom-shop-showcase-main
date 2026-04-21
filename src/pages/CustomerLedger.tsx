@@ -171,8 +171,8 @@ export default function CustomerLedger() {
   const totalBilled = customerBalance?.totalBilled ?? 0;
   const totalPaid = customerBalance?.totalPaid ?? 0;
 
-  const handlePaymentSubmit = async (amount: number, paymentMethod: PaymentMethod, notes?: string) => {
-    console.log('Payment submit:', { amount, paymentMethod, notes, customerId, paymentForInvoiceId });
+  const handlePaymentSubmit = async (amount: number, paymentMethod: PaymentMethod, notes?: string, nextPayDate?: string) => {
+    console.log('Payment submit:', { amount, paymentMethod, notes, nextPayDate, customerId, paymentForInvoiceId });
 
     if (!customer) {
       toast.error('Customer not found');
@@ -187,7 +187,8 @@ export default function CustomerLedger() {
         await apiPost(`/api/invoices/${paymentForInvoiceId}/pay`, {
           amount,
           paymentMethod,
-          notes: notes || `Payment for invoice`
+          notes: notes || `Payment for invoice`,
+          nextPayDate
         });
 
         // Refresh customer balance after payment
@@ -625,9 +626,9 @@ export default function CustomerLedger() {
                         </td>
                         <td className="p-3 text-center">
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${ret.status === 'refunded' ? 'bg-green-500/10 text-green-600' :
-                              ret.status === 'processed' ? 'bg-blue-500/10 text-blue-600' :
-                                ret.status === 'pending' ? 'bg-amber-500/10 text-amber-600' :
-                                  'bg-destructive/10 text-destructive'
+                            ret.status === 'processed' ? 'bg-blue-500/10 text-blue-600' :
+                              ret.status === 'pending' ? 'bg-amber-500/10 text-amber-600' :
+                                'bg-destructive/10 text-destructive'
                             }`}>
                             {ret.status.charAt(0).toUpperCase() + ret.status.slice(1)}
                           </span>

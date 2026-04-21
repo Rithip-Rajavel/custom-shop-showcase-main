@@ -14,7 +14,7 @@ interface AddPaymentModalProps {
   onClose: () => void;
   customerName: string;
   currentBalance: number;
-  onSubmit: (amount: number, paymentMethod: PaymentMethod, notes?: string) => void;
+  onSubmit: (amount: number, paymentMethod: PaymentMethod, notes?: string, nextPayDate?: string) => void;
 }
 
 export function AddPaymentModal({
@@ -27,13 +27,14 @@ export function AddPaymentModal({
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('cash');
   const [notes, setNotes] = useState('');
+  const [nextPayDate, setNextPayDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const paymentAmount = parseFloat(amount);
-    
+
     if (isNaN(paymentAmount) || paymentAmount <= 0) {
       toast.error('Please enter a valid amount');
       return;
@@ -45,12 +46,13 @@ export function AddPaymentModal({
     }
 
     setIsSubmitting(true);
-    onSubmit(paymentAmount, paymentMethod, notes || undefined);
-    
+    onSubmit(paymentAmount, paymentMethod, notes || undefined, nextPayDate || undefined);
+
     // Reset form
     setAmount('');
     setPaymentMethod('cash');
     setNotes('');
+    setNextPayDate('');
     setIsSubmitting(false);
     onClose();
   };
@@ -59,6 +61,7 @@ export function AddPaymentModal({
     setAmount('');
     setPaymentMethod('cash');
     setNotes('');
+    setNextPayDate('');
     onClose();
   };
 
@@ -126,6 +129,22 @@ export function AddPaymentModal({
               rows={2}
             />
           </div>
+
+          {amount && parseFloat(amount) < currentBalance && (
+            <div className="space-y-2">
+              <Label htmlFor="nextPayDate">Next Pay Date</Label>
+              <Input
+                id="nextPayDate"
+                type="date"
+                value={nextPayDate}
+                onChange={(e) => setNextPayDate(e.target.value)}
+                placeholder="Select next payment date"
+              />
+              <p className="text-xs text-muted-foreground">
+                Recommended when payment is not full
+              </p>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <Button type="button" variant="outline" onClick={handleClose} className="flex-1">

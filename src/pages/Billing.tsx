@@ -1,4 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Printer, Save, Trash2, CreditCard, Banknote, Smartphone, Clock, HardHat, User, FileText } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -10,6 +11,7 @@ import { InvoiceReceipt } from '@/components/billing/InvoiceReceipt';
 import { RecentProducts } from '@/components/billing/RecentProducts';
 import { OriginalPriceList } from '@/components/billing/OriginalPriceList';
 import { PendingBillsDrawer } from '@/components/billing/PendingBillsDrawer';
+import { CustomerForm } from '@/components/customers/CustomerForm';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,7 +20,7 @@ import { useProducts } from '@/hooks/useProducts';
 import { useCustomers } from '@/hooks/useCustomers';
 import { Users } from 'lucide-react';
 import { useInvoices } from '@/hooks/useInvoices';
-import { updateProductStock } from '@/lib/api';
+import { updateProductStock, updateInvoice, apiGet } from '@/lib/api';
 import { usePayments } from '@/hooks/usePayments';
 import { useSettings } from '@/hooks/useSettings';
 import { usePriceMapping } from '@/hooks/usePriceMapping';
@@ -31,6 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useReactToPrint } from 'react-to-print';
 
 export default function Billing() {
+  const [searchParams] = useSearchParams();
   const { products, addProduct, updateStock } = useProducts();
   const { customers, addCustomer, getCustomersByContractorId } = useCustomers();
   const { addInvoice, getCustomerBalance } = useInvoices();
@@ -56,6 +59,18 @@ export default function Billing() {
   const [invoiceForPrint, setInvoiceForPrint] = useState<Invoice | null>(null);
   const [isRoughDraft, setIsRoughDraft] = useState(false);
   const [activePendingBillId, setActivePendingBillId] = useState<string | undefined>();
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | undefined>();
+  const [nextPayDate, setNextPayDate] = useState('');
+  const [isViewMode, setIsViewMode] = useState(false);
+
+  const [totals, setTotals] = useState({
+    subtotal: 0,
+    totalDiscount: 0,
+    discountPercentage: 0,
+    totalGst: 0,
+    grandTotal: 0,
+    maxDiscount: 0
+  });
   // Contractor-specific fields
   const [endCustomerName, setEndCustomerName] = useState('');
   const [commission, setCommission] = useState(0);
@@ -64,6 +79,9 @@ export default function Billing() {
   // Linked customers for contractor billing
   const [linkedCustomers, setLinkedCustomers] = useState<Customer[]>([]);
   const [selectedLinkedCustomer, setSelectedLinkedCustomer] = useState<Customer | null>(null);
+  // Add Customer modal state
+  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
+  const [freezeContractor, setFreezeContractor] = useState(false);
 
   const handleAddCustomer = (customerData: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => {
     return addCustomer(customerData) as unknown as Customer;
@@ -90,6 +108,67 @@ export default function Billing() {
       setSelectedLinkedCustomer(null);
     }
   }, [isContractor, selectedCustomer, getCustomersByContractorId]);
+
+  // Auto-recalculate commission amount when bill items change if percentage is set
+  useEffect(() => {
+    if (commissionPercentage > 0) {
+      const commissionAmount = (totals.grandTotal * commissionPercentage) / 100;
+      setCommission(commissionAmount);
+    }
+  }, [billItems, commissionPercentage, totals.grandTotal]);
+
+  // Load invoice data for editing from URL parameter
+  useEffect(() => {
+    const editInvoiceIdParam = searchParams.get('editInvoiceId');
+    if (editInvoiceIdParam) {
+      setIsViewMode(true);
+      apiGet(`/api/invoices/${editInvoiceIdParam}`)
+        .then((invoiceData: Invoice) => {
+          console.log('Loaded invoice data:', invoiceData);
+          setEditingInvoiceId(invoiceData.id);
+          setBillItems(invoiceData.items || []);
+          setBillDiscount(invoiceData.totalDiscount || 0);
+          setAmountPaid(invoiceData.amountPaid || 0);
+          setPaymentMethod(invoiceData.paymentMethod || 'cash');
+          setBillNotes(invoiceData.notes || '');
+          setNextPayDate(invoiceData.nextPayDate || '');
+          setIsRoughDraft(invoiceData.billType === 'rough');
+
+          // Set totals from API response immediately
+          setTotals({
+            subtotal: invoiceData.subtotal || 0,
+            totalDiscount: invoiceData.totalDiscount || 0,
+            discountPercentage: invoiceData.subtotal > 0 ? ((invoiceData.totalDiscount || 0) / invoiceData.subtotal) * 100 : 0,
+            totalGst: invoiceData.totalGst || 0,
+            grandTotal: invoiceData.grandTotal || 0,
+            maxDiscount: (invoiceData.subtotal || 0) + (invoiceData.totalGst || 0)
+          });
+
+          // Set customer
+          const customer = customers.find(c => c.id === invoiceData.customerId);
+          if (customer) {
+            setSelectedCustomer(customer);
+          } else {
+            console.warn('Customer not found:', invoiceData.customerId);
+          }
+
+          // Set contractor-specific fields
+          if (invoiceData.customerType === 'contractor') {
+            setEndCustomerName(invoiceData.endCustomerName || '');
+            setCommission(invoiceData.commission || 0);
+            if (invoiceData.contractorId) {
+              const contractor = customers.find(c => c.id === invoiceData.contractorId);
+              if (contractor) {
+                setSelectedCustomer(contractor);
+              }
+            }
+          }
+        })
+        .catch((error) => {
+          console.error('Failed to load invoice for editing:', error);
+        });
+    }
+  }, [searchParams]);
 
   // Get all contractors for the dropdown
   const contractors = customers.filter(c => c.type === 'contractor');
@@ -170,7 +249,7 @@ export default function Billing() {
   };
 
   // Get effective total for an item (respects customTotal)
-  const getEffectiveTotal = (item: BillItem) => item.customTotal !== undefined ? item.customTotal : item.total;
+  const getEffectiveTotal = (item: BillItem) => item.customTotal != null ? item.customTotal : item.total;
 
   const addProductToBill = async (product: Product) => {
     const existingItem = billItems.find((item) => item.productId === product.id);
@@ -300,22 +379,27 @@ export default function Billing() {
   const calculateTotals = useCallback(() => {
     console.log('Calculating totals for billItems:', billItems);
     const subtotal = billItems.reduce((sum, item) => {
-      if (item.customTotal !== undefined) return sum + item.customTotal;
+      if (item.customTotal != null) return sum + item.customTotal;
       const baseAmount = calculateItemBaseAmount(item);
       console.log(`Item ${item.productName}: baseAmount = ${baseAmount}, total = ${item.total}`);
       return sum + baseAmount;
     }, 0);
     const totalGst = billItems.reduce((sum, item) => {
-      if (item.customTotal !== undefined) return sum; // GST included in custom total
+      if (item.customTotal != null) return sum; // GST included in custom total
       return sum + item.gstAmount;
     }, 0);
     const afterGst = subtotal + totalGst;
     const effectiveDiscount = Math.min(billDiscount, afterGst);
     const grandTotal = Math.max(0, afterGst - effectiveDiscount);
-    const discountPercentage = calculateDiscountPercentage(afterGst, effectiveDiscount);
-    console.log('Final totals:', { subtotal, totalGst, grandTotal });
+    const discountPercentage = afterGst > 0 ? (effectiveDiscount / afterGst) * 100 : 0;
+    console.log('Final totals:', { subtotal, totalGst, grandTotal, discountPercentage });
     return { subtotal, totalDiscount: effectiveDiscount, discountPercentage, totalGst, grandTotal, maxDiscount: afterGst };
   }, [billItems, billDiscount]);
+
+  useEffect(() => {
+    const calculatedTotals = calculateTotals();
+    setTotals(calculatedTotals);
+  }, [calculateTotals]);
 
   // Print rough bill WITHOUT saving - just print and keep the page
   const handlePrintRoughBill = async () => {
@@ -330,8 +414,6 @@ export default function Billing() {
       endCustomerName, commission, billNotes, activePendingBillId
     );
     setActivePendingBillId(pending.id);
-
-    const totals = calculateTotals();
 
     // Use linked customer info if contractor is billing for a linked customer
     const roughBillCustomerId = isContractor && selectedLinkedCustomer
@@ -391,7 +473,6 @@ export default function Billing() {
       return null;
     }
 
-    const totals = calculateTotals();
     const finalAmountPaid = amountPaid > 0 ? amountPaid : totals.grandTotal;
     const balance = totals.grandTotal - finalAmountPaid;
 
@@ -416,27 +497,52 @@ export default function Billing() {
 
     let invoice;
     try {
-      invoice = await addInvoice(
-        {
+      if (editingInvoiceId) {
+        // Update existing invoice
+        invoice = await updateInvoice(editingInvoiceId, {
           customerId: invoiceCustomerId,
           customerName: invoiceCustomerName,
           customerPhone: invoiceCustomerPhone,
           customerType: invoiceCustomerType,
-          endCustomerName: isContractor ? endCustomerName.trim() : undefined,
-          commission: isContractor && commission > 0 ? commission : undefined,
-          // Include contractor fields if billing for a contractor or customer linked to contractor
-          contractorId: isContractor ? selectedCustomer.id : linkedContractor?.id,
-          contractorName: isContractor ? selectedCustomer.name : linkedContractor?.name,
           items: billItems,
-          ...totals,
+          subtotal: totals.subtotal,
+          totalDiscount: totals.totalDiscount,
+          totalGst: totals.totalGst,
+          grandTotal: totals.grandTotal,
           amountPaid: finalAmountPaid,
           balance: Math.max(0, balance),
           paymentMethod,
-          status: balance > 0 ? 'pending' : 'paid',
           billType: 'final_bill',
-        },
-        settings.invoicePrefix
-      );
+          nextPayDate: nextPayDate || undefined,
+        });
+        setEditingInvoiceId(undefined);
+        setNextPayDate('');
+      } else {
+        // Create new invoice
+        invoice = await addInvoice(
+          {
+            customerId: invoiceCustomerId,
+            customerName: invoiceCustomerName,
+            customerPhone: invoiceCustomerPhone,
+            customerType: invoiceCustomerType,
+            endCustomerName: isContractor ? endCustomerName.trim() : undefined,
+            commission: isContractor && commission > 0 ? commission : undefined,
+            // Include contractor fields if billing for a contractor or customer linked to contractor
+            contractorId: isContractor ? selectedCustomer.id : linkedContractor?.id,
+            contractorName: isContractor ? selectedCustomer.name : linkedContractor?.name,
+            items: billItems,
+            ...totals,
+            amountPaid: finalAmountPaid,
+            balance: Math.max(0, balance),
+            paymentMethod,
+            status: balance > 0 ? 'pending' : 'paid',
+            billType: 'final_bill',
+            notes: billNotes,
+            nextPayDate: nextPayDate || undefined,
+          },
+          settings.invoicePrefix
+        );
+      }
     } catch (error: any) {
       // Handle specific business errors
       if (error?.error?.code === 'BUSINESS_ERROR') {
@@ -576,8 +682,6 @@ export default function Billing() {
     toast({ title: 'Deleted', description: 'Pending bill removed' });
   };
 
-  const totals = calculateTotals();
-
   const paymentMethods: { value: PaymentMethod; label: string; icon: React.ComponentType<any> }[] = [
     { value: 'cash', label: 'Cash', icon: Banknote },
     { value: 'card', label: 'Card', icon: CreditCard },
@@ -588,7 +692,22 @@ export default function Billing() {
   return (
     <MainLayout>
       <div className="flex items-center justify-between mb-2">
-        <PageHeader title="New Bill" description="Create a new invoice for customers and contractors" />
+        <div className="flex items-center gap-4">
+          <PageHeader title="New Bill" description="Create a new invoice for customers and contractors" />
+          {editingInvoiceId && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">{isViewMode ? 'View Mode' : 'Edit Mode'}</span>
+              <button
+                onClick={() => setIsViewMode(!isViewMode)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isViewMode ? 'bg-muted' : 'bg-primary'}`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isViewMode ? 'translate-x-1' : 'translate-x-6'}`}
+                />
+              </button>
+            </div>
+          )}
+        </div>
         <PendingBillsDrawer
           pendingBills={pendingBills}
           onLoadBill={handleLoadPendingBill}
@@ -622,6 +741,7 @@ export default function Billing() {
               onSelectCustomer={handleSelectCustomer}
               onAddCustomer={handleAddCustomer}
               contractors={contractors}
+              disabled={freezeContractor || isViewMode}
             />
 
             {isContractor && (
@@ -632,39 +752,41 @@ export default function Billing() {
                     <Users className="w-4 h-4" />
                     Select Linked Customer *
                   </Label>
-                  {linkedCustomers.length > 0 ? (
-                    <Select
-                      value={selectedLinkedCustomer?.id || '_manual_'}
-                      onValueChange={(customerId) => {
-                        if (customerId === '_manual_') {
-                          setSelectedLinkedCustomer(null);
-                          setEndCustomerName('');
-                        } else {
-                          const customer = linkedCustomers.find(c => c.id === customerId);
-                          setSelectedLinkedCustomer(customer || null);
-                          setEndCustomerName(customer?.name || '');
-                        }
-                      }}
-                    >
-                      <SelectTrigger className="h-10">
-                        <SelectValue placeholder="Select a linked customer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="_manual_">-- Enter Manually --</SelectItem>
-                        {linkedCustomers.map((customer) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.name} ({customer.phone})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <div className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-lg">
-                      No linked customers found. Enter end customer name manually below.
-                    </div>
-                  )}
+                  <Select
+                    value={selectedLinkedCustomer?.id || '_manual_'}
+                    onValueChange={(customerId) => {
+                      if (customerId === '_add_customer_') {
+                        // Open Add Customer modal with contractor pre-filled
+                        setShowAddCustomerModal(true);
+                        setFreezeContractor(true);
+                      } else if (customerId === '_manual_') {
+                        setSelectedLinkedCustomer(null);
+                        setEndCustomerName('');
+                      } else {
+                        const customer = linkedCustomers.find(c => c.id === customerId);
+                        setSelectedLinkedCustomer(customer || null);
+                        setEndCustomerName(customer?.name || '');
+                      }
+                    }}
+                    disabled={isViewMode}
+                  >
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Select a linked customer" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="_manual_">-- Enter Manually --</SelectItem>
+                      <SelectItem value="_add_customer_" className="text-primary font-semibold">
+                        + Add Customer
+                      </SelectItem>
+                      {linkedCustomers.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          {customer.name} ({customer.phone})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <p className="text-xs text-muted-foreground">
-                    Choose a customer linked to this contractor, or enter manually
+                    Choose a customer linked to this contractor, or add a new customer
                   </p>
                 </div>
 
@@ -685,7 +807,7 @@ export default function Billing() {
                     }}
                     placeholder="Enter end customer name (e.g., Raj, Rahul)"
                     className="h-10"
-                    readOnly={!!selectedLinkedCustomer}
+                    readOnly={!!selectedLinkedCustomer || isViewMode}
                   />
                   <p className="text-xs text-muted-foreground">
                     The customer this contractor is purchasing goods for
@@ -696,10 +818,12 @@ export default function Billing() {
           </div>
 
           {/* Recent Products */}
-          <RecentProducts products={products} onSelectProduct={addProductToBill} />
+          <div className={isViewMode ? 'opacity-50 pointer-events-none' : ''}>
+            <RecentProducts products={products} onSelectProduct={addProductToBill} />
+          </div>
 
           {/* Product Search */}
-          <div className="bg-card border border-border rounded-xl p-4">
+          <div className={`bg-card border border-border rounded-xl p-4 ${isViewMode ? 'opacity-50 pointer-events-none' : ''}`}>
             <ProductSearch
               products={products}
               onSelectProduct={addProductToBill}
@@ -754,10 +878,11 @@ export default function Billing() {
                 <button
                   key={method.value}
                   onClick={() => setPaymentMethod(method.value)}
+                  disabled={isViewMode}
                   className={`flex items-center justify-center gap-2 p-3 rounded-lg border transition-colors ${paymentMethod === method.value
                     ? 'bg-primary text-primary-foreground border-primary'
                     : 'bg-background border-border hover:bg-muted'
-                    }`}
+                    } ${isViewMode ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <method.icon size={18} />
                   <span className="text-sm font-medium">{method.label}</span>
@@ -789,12 +914,12 @@ export default function Billing() {
                       onChange={(e) => {
                         const percentage = parseFloat(e.target.value) || 0;
                         setCommissionPercentage(percentage);
-                        const totals = calculateTotals();
                         const commissionAmount = (totals.grandTotal * percentage) / 100;
                         setCommission(commissionAmount);
                       }}
                       className="h-9"
                       placeholder="0"
+                      disabled={isViewMode}
                     />
                   </div>
                   <div className="space-y-2">
@@ -810,6 +935,7 @@ export default function Billing() {
                       onChange={(e) => setCommission(parseFloat(e.target.value) || 0)}
                       className="h-9"
                       placeholder="0"
+                      disabled={isViewMode}
                     />
                   </div>
                 </div>
@@ -868,13 +994,15 @@ export default function Billing() {
                     }}
                     className="h-9"
                     placeholder="0"
+                    disabled={isViewMode}
                   />
-                  {billDiscount > 0 && (
-                    <span className="text-sm text-muted-foreground whitespace-nowrap">
-                      ({totals.discountPercentage.toFixed(1)}%)
-                    </span>
-                  )}
                 </div>
+                {billDiscount > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Discount Percentage</span>
+                    <span>{totals.discountPercentage.toFixed(1)}%</span>
+                  </div>
+                )}
               </div>
 
               <div className="border-t border-border pt-3">
@@ -892,50 +1020,59 @@ export default function Billing() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={amountPaid || (!hasManuallyEditedAmount ? totals.grandTotal : 0)}
+                  value={amountPaid}
                   onChange={(e) => {
                     const value = parseFloat(e.target.value) || 0;
-                    if (value < 0) { setAmountPaid(0); return; }
                     setAmountPaid(value);
                     setHasManuallyEditedAmount(true);
                   }}
-                  onFocus={(e) => {
-                    // If not manually edited yet, pre-fill with grandTotal on focus
-                    if (!hasManuallyEditedAmount && amountPaid === 0) {
-                      setAmountPaid(totals.grandTotal);
-                    }
-                  }}
                   className="h-9"
-                  placeholder={totals.grandTotal.toString()}
+                  placeholder="0"
+                  disabled={isViewMode}
                 />
-                {amountPaid > 0 && amountPaid < totals.grandTotal && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Balance Due</span>
-                    <span className="text-destructive font-medium">{formatCurrency(totals.grandTotal - amountPaid)}</span>
-                  </div>
-                )}
+              </div>
+
+              {/* Next Pay Date - Show when not fully paid */}
+              {totals.grandTotal > amountPaid && (
+                <div className="space-y-2 pt-2 border-t border-border">
+                  <Label htmlFor="nextPayDate" className="text-sm text-muted-foreground">Next Pay Date</Label>
+                  <Input
+                    id="nextPayDate"
+                    type="date"
+                    value={nextPayDate}
+                    onChange={(e) => setNextPayDate(e.target.value)}
+                    className="h-9"
+                    disabled={isViewMode}
+                  />
+                </div>
+              )}
+              {amountPaid > 0 && amountPaid < totals.grandTotal && (
+                <div className="flex justify-between text-sm pt-2 border-t border-border">
+                  <span className="text-muted-foreground">Balance Due</span>
+                  <span className="text-destructive font-medium">{formatCurrency(totals.grandTotal - amountPaid)}</span>
+                </div>
+              )}
+
+              {/* Actions */}
+              <div className="space-y-2">
+                <Button onClick={handleSaveOnly} className="w-full gap-2" size="lg" disabled={isViewMode}>
+                  <Save size={18} />
+                  Save Invoice
+                </Button>
+                <Button onClick={handlePrintFinalBill} variant="outline" className="w-full gap-2" size="lg" disabled={isViewMode}>
+                  <Printer size={18} />
+                  Save & Print Final Bill
+                </Button>
+                <Button onClick={handlePrintRoughBill} variant="outline" className="w-full gap-2 border-dashed" size="lg" disabled={isViewMode}>
+                  <FileText size={18} />
+                  Print Rough Bill
+                </Button>
+                <Button onClick={() => clearBill(true)} variant="ghost" className="w-full gap-2 text-destructive hover:text-destructive" disabled={isViewMode}>
+                  <Trash2 size={18} />
+                  Clear Bill
+                </Button>
               </div>
             </div>
-          </div>
-
-          {/* Actions */}
-          <div className="space-y-2">
-            <Button onClick={handleSaveOnly} className="w-full gap-2" size="lg">
-              <Save size={18} />
-              Save Invoice
-            </Button>
-            <Button onClick={handlePrintFinalBill} variant="outline" className="w-full gap-2" size="lg">
-              <Printer size={18} />
-              Save & Print Final Bill
-            </Button>
-            <Button onClick={handlePrintRoughBill} variant="outline" className="w-full gap-2 border-dashed" size="lg">
-              <FileText size={18} />
-              Print Rough Bill
-            </Button>
-            <Button onClick={() => clearBill(true)} variant="ghost" className="w-full gap-2 text-destructive hover:text-destructive">
-              <Trash2 size={18} />
-              Clear Bill
-            </Button>
           </div>
         </div>
       </div>
@@ -948,11 +1085,38 @@ export default function Billing() {
         onSelectProduct={addProductToBill}
       />
 
+      <CustomerForm
+        isOpen={showAddCustomerModal}
+        onClose={() => {
+          setShowAddCustomerModal(false);
+          setFreezeContractor(false);
+        }}
+        defaultType="customer"
+        onSave={async (customerData) => {
+          // Pre-fill contractorId if contractor is selected and freezeContractor is true
+          if (isContractor && selectedCustomer && freezeContractor) {
+            customerData.contractorId = selectedCustomer.id;
+          }
+          const newCustomer = await handleAddCustomer(customerData);
+          // Refresh linked customers list
+          if (isContractor && selectedCustomer) {
+            const updatedLinkedCustomers = await getCustomersByContractorId(selectedCustomer.id);
+            setLinkedCustomers(updatedLinkedCustomers);
+            // Auto-select the newly added customer
+            setSelectedLinkedCustomer(newCustomer);
+            setEndCustomerName(newCustomer.name);
+          }
+          setShowAddCustomerModal(false);
+          setFreezeContractor(false);
+        }}
+        contractors={contractors}
+      />
+
       <div style={{ display: 'none' }}>
         <div ref={printRef}>
           {invoiceForPrint && <InvoiceReceipt invoice={invoiceForPrint} settings={settings} isRoughDraft={isRoughDraft} />}
         </div>
       </div>
-    </MainLayout>
+    </MainLayout >
   );
 }

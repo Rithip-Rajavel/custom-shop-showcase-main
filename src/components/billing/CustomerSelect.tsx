@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { UserPlus, Search, User, AlertTriangle, HardHat, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ interface CustomerSelectProps {
   onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'updatedAt'>) => Customer;
   getCustomerBalance?: (customerId: string) => { pendingBalance: number } | null;
   contractors?: Customer[]; // List of contractors to link customer to
+  disabled?: boolean; // Disable the dropdown when adding a linked customer
 }
 
 export function CustomerSelect({
@@ -30,19 +31,33 @@ export function CustomerSelect({
   onAddCustomer,
   getCustomerBalance,
   contractors = [],
+  disabled = false,
 }: CustomerSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'customer' | 'contractor'>('all');
+  const [contractorSearchQuery, setContractorSearchQuery] = useState('');
   const [newCustomer, setNewCustomer] = useState({
     name: '',
     phone: '',
     email: '',
     address: '',
+    city: '',
     type: 'customer' as 'customer' | 'contractor',
     contractorId: '',
   });
+
+  // Filter contractors by name, phone, or city
+  const filteredContractors = useMemo(() => {
+    if (!contractorSearchQuery) return contractors;
+    const query = contractorSearchQuery.toLowerCase();
+    return contractors.filter((contractor) =>
+      contractor.name.toLowerCase().includes(query) ||
+      contractor.phone.includes(query) ||
+      (contractor.city && contractor.city.toLowerCase().includes(query))
+    );
+  }, [contractors, contractorSearchQuery]);
 
   const filteredCustomers = customers.filter((c) => {
     const matchesSearch = !searchQuery ||
@@ -60,7 +75,7 @@ export function CustomerSelect({
     };
     const customer = onAddCustomer(customerData);
     onSelectCustomer(customer);
-    setNewCustomer({ name: '', phone: '', email: '', address: '', type: 'customer', contractorId: '' });
+    setNewCustomer({ name: '', phone: '', email: '', address: '', city: '', type: 'customer', contractorId: '' });
     setIsAddingNew(false);
     setIsOpen(false);
   };
@@ -83,9 +98,9 @@ export function CustomerSelect({
 
   return (
     <div className="space-y-2">
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <Dialog open={isOpen} onOpenChange={(open) => !disabled && setIsOpen(open)}>
         <DialogTrigger asChild>
-          <Button variant="outline" className="w-full justify-start h-12 text-left">
+          <Button variant="outline" className="w-full justify-start h-12 text-left" disabled={disabled}>
             {selectedCustomer ? getTypeIcon(selectedCustomer.type) : <User className="w-5 h-5 text-muted-foreground" />}
             <div className="ml-3 flex-1">
               {selectedCustomer ? (
@@ -131,6 +146,16 @@ export function CustomerSelect({
               {newCustomer.type === 'customer' && contractors.length > 0 && (
                 <div className="space-y-2">
                   <Label>Link to Contractor (Optional)</Label>
+                  {/* Search input for contractors */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search by name, phone, or city..."
+                      value={contractorSearchQuery}
+                      onChange={(e) => setContractorSearchQuery(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
                   <Select
                     value={newCustomer.contractorId || '_none_'}
                     onValueChange={(v) => setNewCustomer({ ...newCustomer, contractorId: v === '_none_' ? '' : v })}
@@ -140,11 +165,22 @@ export function CustomerSelect({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="_none_">No Contractor</SelectItem>
-                      {contractors.map((contractor) => (
-                        <SelectItem key={contractor.id} value={contractor.id}>
-                          {contractor.name} ({contractor.phone})
-                        </SelectItem>
-                      ))}
+                      {filteredContractors.length > 0 ? (
+                        filteredContractors.map((contractor) => (
+                          <SelectItem key={contractor.id} value={contractor.id}>
+                            <div className="flex flex-col">
+                              <span className="font-medium">{contractor.name}</span>
+                              <span className="text-xs text-muted-foreground">
+                                {contractor.phone} {contractor.city ? `• ${contractor.city}` : ''}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No contractors found
+                        </div>
+                      )}
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
@@ -168,6 +204,15 @@ export function CustomerSelect({
                   value={newCustomer.phone}
                   onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
                   placeholder="Phone number"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Input
+                  id="city"
+                  value={newCustomer.city}
+                  onChange={(e) => setNewCustomer({ ...newCustomer, city: e.target.value })}
+                  placeholder="City"
                 />
               </div>
               <div className="flex gap-2">
