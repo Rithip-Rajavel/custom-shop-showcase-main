@@ -31,7 +31,7 @@ import { useSettings } from '@/hooks/useSettings';
 import { Invoice, ShopSettings } from '@/types';
 import { formatCurrency, formatDateTime } from '@/lib/utils';
 import { useReactToPrint } from 'react-to-print';
-import { apiGet, returnInvoice } from '@/lib/api';
+import { apiGet, createReturnRequest } from '@/lib/api';
 
 export default function Invoices() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -120,7 +120,18 @@ export default function Invoices() {
   const handleReturn = async () => {
     if (!viewingInvoice) return;
     try {
-      await returnInvoice(viewingInvoice.id);
+      // Create return request with all invoice items
+      const returnItems = viewingInvoice.items.map(item => ({
+        invoiceItemId: item.id,
+        quantity: item.quantity,
+        reason: 'Customer return'
+      }));
+
+      await createReturnRequest({
+        invoiceId: viewingInvoice.id,
+        reason: 'Customer return',
+        items: returnItems
+      });
       setShowReturnConfirmation(false);
       setViewingInvoice(null);
       // Refresh invoices to show updated status

@@ -193,10 +193,6 @@ export async function updateInvoice(id: string, invoice: any) {
   return apiPut<any>(`/api/invoices/${id}`, invoice);
 }
 
-export async function returnInvoice(id: string) {
-  return apiPost<any>(`/api/invoices/${id}/return`);
-}
-
 export async function deleteInvoice(id: string) {
   return apiDelete<any>(`/api/invoices/${id}`);
 }
