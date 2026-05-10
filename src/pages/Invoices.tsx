@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, FileText, Printer, Eye, Filter, X, RotateCcw, Edit } from 'lucide-react';
+import { Search, FileText, Printer, Eye, Filter, X, RotateCcw, Edit, ShoppingBag, Receipt } from 'lucide-react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { InvoiceReceipt } from '@/components/billing/InvoiceReceipt';
@@ -279,6 +279,24 @@ export default function Invoices() {
                       className="h-9 w-9 p-0"
                     >
                       <Eye size={18} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.location.href = `/invoices/${invoice.id}/ebay-bill`}
+                      className="h-9 w-9 p-0"
+                      title="eBay Bill"
+                    >
+                      <ShoppingBag size={18} />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.location.href = `/invoices/${invoice.id}/gst-bill`}
+                      className="h-9 w-9 p-0"
+                      title="GST Bill"
+                    >
+                      <Receipt size={18} />
                     </Button>
                     <Button
                       variant="ghost"

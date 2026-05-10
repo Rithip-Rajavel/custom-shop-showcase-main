@@ -34,6 +34,8 @@ const navItems = [
   { to: '/contractor-billing', label: 'Contractor Billing', icon: HardHat, permission: 'customers' },
   { to: '/returns', label: 'Returns', icon: RefreshCw, permission: 'invoices' },
   { to: '/invoices', label: 'Invoices', icon: FileText, permission: 'invoices' },
+  { to: '/gst-bills', label: 'GST Bills', icon: FileText, permission: 'invoices' },
+  { to: '/eway-bills', label: 'eWay Bills', icon: FileText, permission: 'invoices' },
   { to: '/employees', label: 'Employees', icon: UserCheck, permission: 'employees' },
   { to: '/attendance', label: 'Mark Attendance', icon: Calendar, permission: 'attendance' },
   { to: '/employee-attendance', label: 'View Attendance', icon: Calendar, permission: 'attendance' },

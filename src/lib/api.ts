@@ -322,3 +322,81 @@ export async function getOverdueSummary() {
 export async function getPendingInvoicesByDate(date: string) {
   return apiGet<any[]>('/api/invoices/pending-due-by-date', { date });
 }
+
+// E-Way Bill API endpoints
+export async function getEwayBills(params?: { page?: number; limit?: number }) {
+  return apiGet<any[]>('/api/eway-bills', params);
+}
+
+export async function getEwayBillById(id: string) {
+  return apiGet<any>(`/api/eway-bills/${id}`);
+}
+
+export async function getEwayBillByNumber(ewayBillNo: string) {
+  return apiGet<any>(`/api/eway-bills/number/${ewayBillNo}`);
+}
+
+export async function getEwayBillsByInvoice(invoiceId: string) {
+  return apiGet<any[]>(`/api/eway-bills/invoice/${invoiceId}`);
+}
+
+export async function getEwayBillsByStatus(status: 'draft' | 'generated' | 'cancelled') {
+  return apiGet<any[]>(`/api/eway-bills/status/${status}`);
+}
+
+export async function getEwayBillsByDateRange(fromDate: string, toDate: string) {
+  return apiGet<any[]>('/api/eway-bills/date-range', { fromDate, toDate });
+}
+
+export async function createEwayBill(ewayBill: any) {
+  return apiPost<any>('/api/eway-bills', ewayBill);
+}
+
+export async function updateEwayBill(id: string, ewayBill: any) {
+  return apiPut<any>(`/api/eway-bills/${id}`, ewayBill);
+}
+
+export async function generateEwayBill(id: string) {
+  return apiPost<any>(`/api/eway-bills/${id}/generate`);
+}
+
+export async function cancelEwayBill(id: string) {
+  return apiPost<any>(`/api/eway-bills/${id}/cancel`);
+}
+
+export async function deleteEwayBill(id: string) {
+  return apiDelete<any>(`/api/eway-bills/${id}`);
+}
+
+export async function getEwayBillCountByStatus(status: 'draft' | 'generated' | 'cancelled') {
+  return apiGet<number>(`/api/eway-bills/count/status/${status}`);
+}
+
+export async function getEwayBillStatistics() {
+  return apiGet<any>('/api/eway-bills/statistics');
+}
+
+// GST Bill API endpoints
+export async function getGstBills(params?: { page?: number; limit?: number; customerName?: string; fromDate?: string; toDate?: string }) {
+  return apiGet<any[]>('/api/gst-bills', params);
+}
+
+export async function getGstBillById(id: string) {
+  return apiGet<any>(`/api/gst-bills/${id}`);
+}
+
+export async function getGstBillByInvoice(invoiceId: string) {
+  return apiGet<any>(`/api/gst-bills/invoice/${invoiceId}`);
+}
+
+export async function createGstBill(gstBill: any) {
+  return apiPost<any>('/api/gst-bills', gstBill);
+}
+
+export async function updateGstBill(id: string, gstBill: any) {
+  return apiPut<any>(`/api/gst-bills/${id}`, gstBill);
+}
+
+export async function deleteGstBill(id: string) {
+  return apiDelete<any>(`/api/gst-bills/${id}`);
+}

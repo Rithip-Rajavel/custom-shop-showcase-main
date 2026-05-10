@@ -97,6 +97,8 @@ export interface Invoice {
   billType?: 'rough' | 'final_bill';
   notes?: string;
   nextPayDate?: string;
+  ebayBill?: boolean;
+  gstBill?: boolean;
   createdAt: string;
   updatedAt: string;
 }
